@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './Layout';
 import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
+import Categories from './pages/Categories';
 import TransactionForm from './components/TransactionForm';
 
 const App: React.FC = () => {
@@ -12,6 +13,7 @@ const App: React.FC = () => {
         <Route path="/" element={<Layout />}>
           <Route index element={<Dashboard />} />
           <Route path="transactions" element={<Transactions />} />
+          <Route path="categories" element={<Categories />} />
         </Route>
       </Routes>
       <TransactionForm />

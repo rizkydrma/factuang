@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, ArrowRight, Delete, ChevronDown } from 'lucide-react';
 import { db } from '../db/database';
 import { useUIStore } from '../store/uiStore';
@@ -11,23 +11,22 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
-
-const CATEGORIES = [
-  'Food',
-  'Transport',
-  'Shopping',
-  'Bills',
-  'Entertainment',
-  'Health',
-  'Other',
-];
+import { useLiveQuery } from 'dexie-react-hooks';
 
 const TransactionForm: React.FC = () => {
   const { isAddModalOpen, closeAddModal } = useUIStore();
   const [expression, setExpression] = useState('');
-  const [category, setCategory] = useState(CATEGORIES[0]);
+  const [category, setCategory] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [note, setNote] = useState('');
+
+  const categories = useLiveQuery(() => db.categories.toArray()) || [];
+
+  useEffect(() => {
+    if (categories.length > 0 && !category) {
+      setCategory(categories[0].name);
+    }
+  }, [categories, category]);
 
   const calculateResult = (expr: string): string => {
     try {
@@ -73,7 +72,7 @@ const TransactionForm: React.FC = () => {
     await db.transactions.add({
       type: 'expense',
       amount: Number(finalAmount),
-      category,
+      category: category || 'Other',
       date,
       note,
     });
@@ -138,9 +137,9 @@ const TransactionForm: React.FC = () => {
                   onChange={(e) => setCategory(e.target.value)}
                   className="w-full h-12 bg-secondary/10 border-none rounded-xl font-black text-[10px] uppercase tracking-widest px-4 appearance-none outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground"
                 >
-                  {CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.name}>
+                      {cat.name}
                     </option>
                   ))}
                 </select>
