@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/database';
-import { Trash2, Search, ReceiptText, ChevronLeft } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import {
+  Delete02Icon,
+  Search01Icon,
+  Invoice01Icon,
+  ArrowLeft01Icon,
+} from '@hugeicons/core-free-icons';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -41,7 +47,7 @@ const Transactions: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen animate-in fade-in duration-700">
       {/* Page Header */}
-      <header className="px-8 pt-8 pb-6 flex items-center justify-between bg-background border-b border-secondary/20">
+      <header className="px-8 pt-8 pb-6 flex items-center justify-between bg-background border-b border-border">
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
@@ -49,7 +55,7 @@ const Transactions: React.FC = () => {
             onClick={() => navigate('/')}
             className="rounded-full hover:bg-secondary/20"
           >
-            <ChevronLeft size={24} strokeWidth={2.5} />
+            <HugeiconsIcon icon={ArrowLeft01Icon} size={24} strokeWidth={2.5} />
           </Button>
           <div className="space-y-0.5">
             <h2 className="text-xl font-black uppercase tracking-tighter text-foreground">
@@ -60,12 +66,17 @@ const Transactions: React.FC = () => {
             </p>
           </div>
         </div>
-        <Search size={24} className="text-foreground/30" />
+        <HugeiconsIcon
+          icon={Search01Icon}
+          size={24}
+          className="text-foreground/30"
+        />
       </header>
 
       <div className="flex-1 p-6 space-y-6">
         <div className="relative group">
-          <Search
+          <HugeiconsIcon
+            icon={Search01Icon}
             className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground/30 group-focus-within:text-primary transition-colors"
             size={18}
           />
@@ -74,7 +85,7 @@ const Transactions: React.FC = () => {
             placeholder="Search categories..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-12 h-14 bg-white border-secondary rounded-2xl focus-visible:ring-primary font-bold placeholder:text-foreground/20 shadow-sm"
+            className="pl-12 h-14 bg-card border-secondary rounded-2xl focus-visible:ring-primary font-bold placeholder:text-foreground/20 shadow-sm"
           />
         </div>
 
@@ -83,11 +94,15 @@ const Transactions: React.FC = () => {
             transactions.map((t) => (
               <Card
                 key={t.id}
-                className="group relative bg-white border-secondary/50 p-5 rounded-3xl flex items-center justify-between hover:border-primary transition-all duration-300 shadow-sm shadow-secondary/10"
+                className="group relative bg-card border-secondary/50 p-5 rounded-3xl flex items-center justify-between hover:border-primary transition-all duration-300 shadow-sm shadow-secondary/10"
               >
                 <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-2xl bg-secondary/30 text-foreground/60">
-                    <ReceiptText size={20} strokeWidth={2.5} />
+                  <div className="p-3 rounded-2xl bg-secondary text-primary">
+                    <HugeiconsIcon
+                      icon={Invoice01Icon}
+                      size={20}
+                      strokeWidth={2.5}
+                    />
                   </div>
                   <div className="space-y-0.5">
                     <p className="text-sm font-black uppercase tracking-tight text-foreground">
@@ -119,15 +134,15 @@ const Transactions: React.FC = () => {
                     className="h-8 w-8 text-foreground/10 hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all opacity-0 group-hover:opacity-100 active:scale-90"
                     aria-label="Delete"
                   >
-                    <Trash2 size={16} />
+                    <HugeiconsIcon icon={Delete02Icon} size={16} />
                   </Button>
                 </div>
               </Card>
             ))
           ) : (
             <div className="py-20 flex flex-col items-center justify-center text-foreground/10 space-y-4">
-              <div className="p-8 bg-white border border-secondary rounded-full shadow-sm">
-                <Search size={48} strokeWidth={1} />
+              <div className="p-8 bg-card border border-secondary rounded-full shadow-sm">
+                <HugeiconsIcon icon={Search01Icon} size={48} strokeWidth={1} />
               </div>
               <p className="text-xs font-black uppercase tracking-[0.3em]">
                 No records found

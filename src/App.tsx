@@ -4,6 +4,7 @@ import Layout from './Layout';
 import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
 import Categories from './pages/Categories';
+import Settings from './pages/Settings';
 import TransactionForm from './components/TransactionForm';
 
 const App: React.FC = () => {
@@ -14,6 +15,7 @@ const App: React.FC = () => {
           <Route index element={<Dashboard />} />
           <Route path="transactions" element={<Transactions />} />
           <Route path="categories" element={<Categories />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
       </Routes>
       <TransactionForm />

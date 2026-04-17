@@ -1,13 +1,14 @@
 import { useLiveQuery } from 'dexie-react-hooks';
+import { HugeiconsIcon } from '@hugeicons/react';
 import {
-  Activity,
-  ChevronLeft,
-  ChevronRight,
-  ReceiptText,
-  Search,
-  Settings,
-  Trash2,
-} from 'lucide-react';
+  Activity01Icon,
+  ArrowLeft01Icon,
+  ArrowRight01Icon,
+  Invoice01Icon,
+  Search01Icon,
+  Settings01Icon,
+  Delete02Icon,
+} from '@hugeicons/core-free-icons';
 import React, { useState } from 'react';
 import { db } from '../db/database';
 
@@ -60,57 +61,78 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen animate-in fade-in duration-700">
+    <div className="flex flex-col min-h-screen animate-in fade-in duration-700 bg-background">
       {/* Hero Header Section */}
-      <section className="bg-gradient-to-br from-[#146C94] to-[#0A3D54] px-8 pt-8 pb-16 space-y-12">
-        <header className="flex items-center justify-between text-white/90">
+      <section className="bg-background border-b border-border px-8 pt-8 pb-16 space-y-12 transition-colors duration-300">
+        <header className="flex items-center justify-between text-foreground">
           <div className="flex items-center gap-3">
-            <Activity size={28} strokeWidth={3} className="text-white" />
+            <HugeiconsIcon
+              icon={Activity01Icon}
+              size={28}
+              strokeWidth={3}
+              className="text-primary"
+            />
             <div className="flex items-baseline gap-1.5">
-              <h1 className="text-xl font-black tracking-tighter uppercase text-white">
+              <h1 className="text-xl font-black tracking-tighter uppercase">
                 Factuang
               </h1>
-              <span className="text-[10px] font-bold text-white/40">0.0.1</span>
+              <span className="text-[10px] font-bold opacity-30">0.0.1</span>
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <Search size={24} />
-            <Settings size={24} />
+            <HugeiconsIcon
+              icon={Search01Icon}
+              size={24}
+              className="opacity-50"
+            />
+            <HugeiconsIcon
+              icon={Settings01Icon}
+              size={24}
+              className="opacity-50"
+            />
           </div>
         </header>
 
-        <div className="flex items-center justify-between text-white">
+        <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold tracking-tight capitalize">
             {monthYear}
           </h2>
           <div className="flex items-center gap-4">
             <button
               onClick={() => changeMonth(-1)}
-              className="p-1 hover:bg-white/10 rounded-full transition-colors"
+              className="p-1 hover:bg-secondary rounded-full transition-colors flex items-center justify-center"
             >
-              <ChevronLeft size={24} strokeWidth={2.5} />
+              <HugeiconsIcon
+                icon={ArrowLeft01Icon}
+                size={24}
+                strokeWidth={2.5}
+              />
             </button>
             <button
               onClick={() => changeMonth(1)}
-              className="p-1 hover:bg-white/10 rounded-full transition-colors"
+              className="p-1 hover:bg-secondary rounded-full transition-colors flex items-center justify-center"
             >
-              <ChevronRight size={24} strokeWidth={2.5} />
+              <HugeiconsIcon
+                icon={ArrowRight01Icon}
+                size={24}
+                strokeWidth={2.5}
+              />
             </button>
           </div>
         </div>
 
         <div className="space-y-1">
-          <p className="text-sm font-medium text-white/60 tracking-wide">
+          <p className="text-sm font-medium opacity-50 tracking-wide">
             Total pengeluaran
           </p>
-          <p className="text-3xl font-black tracking-tighter text-white">
+          <p className="text-3xl font-black tracking-tighter text-primary">
             {formatCurrency(totalExpense).replace(',00', '')}
           </p>
         </div>
       </section>
 
-      {/* Content Section Overlay */}
-      <div className="flex-1 bg-background -mt-8 rounded-t-[40px] px-6 pt-10 pb-8 space-y-10">
+      {/* Content Section Area */}
+      <div className="flex-1 bg-background px-6 pt-10 pb-8 space-y-10 transition-colors duration-300">
         {/* Monthly Transaction List */}
         <section className="space-y-6 pt-4">
           <div className="flex items-center justify-between">
@@ -126,11 +148,15 @@ const Dashboard: React.FC = () => {
               [...transactions].reverse().map((t) => (
                 <div
                   key={t.id}
-                  className="group relative bg-white border border-secondary/30 p-4 rounded-2xl flex items-center justify-between shadow-sm shadow-secondary/5"
+                  className="group relative bg-card border border-secondary/30 p-4 rounded-2xl flex items-center justify-between shadow-sm shadow-secondary/5"
                 >
                   <div className="flex items-center gap-3">
                     <div className="p-2.5 rounded-xl bg-secondary/20 text-primary">
-                      <ReceiptText size={18} strokeWidth={2.5} />
+                      <HugeiconsIcon
+                        icon={Invoice01Icon}
+                        size={18}
+                        strokeWidth={2.5}
+                      />
                     </div>
                     <div className="space-y-0.5">
                       <p className="text-xs font-black uppercase tracking-tight text-foreground">
@@ -156,9 +182,9 @@ const Dashboard: React.FC = () => {
                     </p>
                     <button
                       onClick={() => t.id && handleDelete(t.id)}
-                      className="p-1 text-foreground/10 hover:text-destructive transition-all"
+                      className="p-1 text-foreground/10 hover:text-destructive transition-all flex items-center justify-center"
                     >
-                      <Trash2 size={14} />
+                      <HugeiconsIcon icon={Delete02Icon} size={14} />
                     </button>
                   </div>
                 </div>

@@ -1,141 +1,438 @@
-import React, { useState } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '../db/database';
-import { Trash2, Plus, ChevronLeft, Tag } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { AnimatePresence, motion } from 'framer-motion';
+import { HugeiconsIcon } from '@hugeicons/react';
+import {
+  PackageIcon,
+  Briefcase01Icon,
+  Camera01Icon,
+  Car01Icon,
+  ArrowLeft01Icon,
+  Coffee01Icon,
+  Dumbbell01Icon,
+  Joystick01Icon,
+  GiftIcon,
+  GlobeIcon,
+  Certificate01Icon,
+  FavouriteIcon,
+  Home01Icon,
+  MusicNote01Icon,
+  Pizza01Icon,
+  Airplane01Icon,
+  Add01Icon,
+  Invoice01Icon,
+  Search01Icon,
+  ShoppingBag01Icon,
+  SparklesIcon,
+  Tag01Icon,
+  Delete02Icon,
+  SpoonAndForkIcon,
+  Cancel01Icon,
+  FlashIcon,
+} from '@hugeicons/core-free-icons';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { db, type Category } from '../db/database';
+
+const AVAILABLE_ICONS = [
+  { name: 'Utensils', icon: SpoonAndForkIcon },
+  { name: 'Car', icon: Car01Icon },
+  { name: 'ShoppingBag', icon: ShoppingBag01Icon },
+  { name: 'Receipt', icon: Invoice01Icon },
+  { name: 'Gamepad2', icon: Joystick01Icon },
+  { name: 'HeartPulse', icon: FavouriteIcon },
+  { name: 'GraduationCap', icon: Certificate01Icon },
+  { name: 'Heart', icon: FavouriteIcon },
+  { name: 'Box', icon: PackageIcon },
+  { name: 'Coffee', icon: Coffee01Icon },
+  { name: 'Home', icon: Home01Icon },
+  { name: 'Zap', icon: FlashIcon },
+  { name: 'Plane', icon: Airplane01Icon },
+  { name: 'Gift', icon: GiftIcon },
+  { name: 'Dumbbell', icon: Dumbbell01Icon },
+  { name: 'Pizza', icon: Pizza01Icon },
+  { name: 'Briefcase', icon: Briefcase01Icon },
+  { name: 'Camera', icon: Camera01Icon },
+  { name: 'Music', icon: MusicNote01Icon },
+  { name: 'Globe', icon: GlobeIcon },
+];
+
+const AVAILABLE_COLORS = [
+  'bg-rose-500',
+  'bg-indigo-500',
+  'bg-emerald-500',
+  'bg-amber-500',
+  'bg-purple-500',
+  'bg-cyan-500',
+  'bg-pink-500',
+  'bg-slate-500',
+  'bg-orange-500',
+  'bg-lime-500',
+];
 
 const Categories: React.FC = () => {
   const navigate = useNavigate();
   const [newCategory, setNewCategory] = useState('');
+  const [selectedIcon, setSelectedIcon] = useState('Tag');
+  const [selectedColor, setSelectedColor] = useState('bg-indigo-500');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isAdding, setIsAdding] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<{
+    id: number;
+    name: string;
+  } | null>(null);
 
   const categories = useLiveQuery(() => db.categories.toArray()) || [];
+
+  const filteredCategories = categories.filter((cat) =>
+    cat.name.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
 
   const handleAddCategory = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCategory.trim()) return;
 
     try {
-      await db.categories.add({ name: newCategory.trim() });
+      await db.categories.add({
+        name: newCategory.trim(),
+        icon: selectedIcon,
+        color: selectedColor,
+      });
       setNewCategory('');
+      setSelectedIcon('Tag');
+      setSelectedColor('bg-indigo-500');
+      setIsAdding(false);
     } catch (error) {
       alert('Kategori sudah ada atau terjadi kesalahan.');
     }
   };
 
-  const handleDeleteCategory = async (id: number, name: string) => {
-    // Check if category is being used in transactions
+  const getIconComponent = (name: string) => {
+    const found = AVAILABLE_ICONS.find((i) => i.name === name);
+    return found ? found.icon : Tag01Icon;
+  };
+
+  const handleDeleteCategory = async () => {
+    if (!categoryToDelete) return;
+
+    const { id, name } = categoryToDelete;
     const count = await db.transactions.where('category').equals(name).count();
+
     if (count > 0) {
-      alert(
-        `Kategori "${name}" sedang digunakan oleh ${count} transaksi. Tidak bisa dihapus.`,
-      );
+      alert(`"${name}" is in use by ${count} transactions. Cannot delete.`);
+      setCategoryToDelete(null);
       return;
     }
 
-    if (confirm(`Hapus kategori "${name}"?`)) {
-      await db.categories.delete(id);
+    await db.categories.delete(id);
+    setCategoryToDelete(null);
+  };
+
+  const getCategoryColor = (cat: Category) => {
+    if (cat.color) return `${cat.color}/10 text-${cat.color.split('-')[1]}-500`;
+
+    const colors = [
+      'bg-indigo-500/10 text-indigo-500',
+      'bg-emerald-500/10 text-emerald-500',
+      'bg-rose-500/10 text-rose-500',
+      'bg-amber-500/10 text-amber-500',
+      'bg-cyan-500/10 text-cyan-500',
+      'bg-fuchsia-500/10 text-fuchsia-500',
+    ];
+    let hash = 0;
+    const name = cat.name || '';
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
     }
+    return colors[Math.abs(hash) % colors.length];
   };
 
   return (
-    <div className="flex flex-col min-h-screen animate-in fade-in duration-700">
-      {/* Page Header */}
-      <header className="px-8 pt-8 pb-6 flex items-center justify-between bg-background border-b border-secondary/20">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate(-1)}
-            className="rounded-full hover:bg-secondary/20"
-          >
-            <ChevronLeft size={24} strokeWidth={2.5} />
-          </Button>
-          <div className="space-y-0.5">
-            <h2 className="text-xl font-black uppercase tracking-tighter text-foreground">
-              Kategori
-            </h2>
-            <p className="text-[10px] text-primary font-black uppercase tracking-[0.2em]">
-              Management
-            </p>
+    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 transition-colors duration-300">
+      {/* Editorial Header */}
+      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3">
+        <div className="max-w-2xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate(-1)}
+              className="p-2 hover:bg-secondary rounded-full transition-colors group flex items-center justify-center"
+            >
+              <HugeiconsIcon
+                icon={ArrowLeft01Icon}
+                size={20}
+                className="group-active:-translate-x-1 transition-transform"
+              />
+            </button>
+            <div>
+              <h1 className="text-lg font-bold tracking-tight leading-none uppercase italic">
+                Categories
+              </h1>
+              <p className="text-[10px] font-medium opacity-40 uppercase tracking-widest mt-1">
+                {categories.length} Total items
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsAdding(!isAdding)}
+              className={cn(
+                'p-2.5 rounded-full transition-all duration-300 flex items-center justify-center',
+                isAdding
+                  ? 'bg-destructive text-destructive-foreground rotate-45'
+                  : 'bg-primary text-primary-foreground shadow-lg shadow-primary/20',
+              )}
+            >
+              <HugeiconsIcon icon={Add01Icon} size={18} strokeWidth={2.5} />
+            </button>
           </div>
         </div>
-        <Tag size={24} className="text-foreground/30" />
       </header>
 
-      <div className="flex-1 p-6 space-y-8">
-        {/* Add New Category */}
-        <form onSubmit={handleAddCategory} className="space-y-3">
-          <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-foreground/40 ml-2">
-            Tambah Kategori Baru
-          </Label>
-          <div className="flex gap-2">
-            <Input
-              type="text"
-              placeholder="Nama kategori..."
-              value={newCategory}
-              onChange={(e) => setNewCategory(e.target.value)}
-              className="flex-1 h-14 bg-white border-secondary rounded-2xl focus-visible:ring-primary font-bold placeholder:text-foreground/20 shadow-sm"
-            />
-            <Button
-              type="submit"
-              size="icon"
-              className="h-14 w-14 rounded-2xl shadow-lg shadow-primary/20"
+      <main className="max-w-2xl mx-auto px-4 pt-6 pb-24 space-y-6">
+        {/* Search & Filter - Compact */}
+        <div className="relative group">
+          <HugeiconsIcon
+            icon={Search01Icon}
+            size={14}
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground/30"
+          />
+          <Input
+            placeholder="Quick search..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 h-10 bg-card border-border rounded-full text-sm font-medium focus-visible:ring-primary/20"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground/30 hover:text-foreground"
             >
-              <Plus size={24} strokeWidth={3} />
+              <HugeiconsIcon icon={Cancel01Icon} size={14} />
+            </button>
+          )}
+        </div>
+
+        {/* Categories Stack */}
+        <section className="flex flex-col gap-3">
+          <AnimatePresence mode="popLayout">
+            {filteredCategories.length > 0 ? (
+              filteredCategories.map((cat) => {
+                const icon = getIconComponent(cat.icon || '');
+                return (
+                  <motion.div
+                    layout
+                    key={cat.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="group relative bg-card border border-border rounded-2xl p-4 flex items-center justify-between hover:border-primary/30 hover:shadow-xl hover:shadow-black/5 transition-all cursor-default"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div
+                        className={cn(
+                          'w-12 h-12 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105',
+                          getCategoryColor(cat),
+                        )}
+                      >
+                        <HugeiconsIcon
+                          icon={icon}
+                          size={20}
+                          strokeWidth={2.5}
+                        />
+                      </div>
+
+                      <div className="space-y-0.5">
+                        <p className="font-bold text-sm uppercase tracking-tight">
+                          {cat.name}
+                        </p>
+                        <p className="text-[10px] font-medium opacity-30 uppercase tracking-[0.1em]">
+                          Reference ID #{cat.id}
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() =>
+                        cat.id &&
+                        setCategoryToDelete({ id: cat.id, name: cat.name })
+                      }
+                      className="p-2.5 rounded-xl text-foreground/10 group-hover:text-destructive group-hover:bg-destructive/5 transition-all active:scale-90 flex items-center justify-center"
+                    >
+                      <HugeiconsIcon icon={Delete02Icon} size={16} />
+                    </button>
+                  </motion.div>
+                );
+              })
+            ) : (
+              <div className="py-20 flex flex-col items-center justify-center text-center opacity-20">
+                <HugeiconsIcon icon={SparklesIcon} size={32} className="mb-4" />
+                <p className="text-xs font-bold uppercase tracking-widest">
+                  No matching categories
+                </p>
+              </div>
+            )}
+          </AnimatePresence>
+        </section>
+      </main>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={!!categoryToDelete}
+        onOpenChange={(open) => !open && setCategoryToDelete(null)}
+      >
+        <DialogContent className="max-w-[320px] rounded-3xl border-none shadow-2xl">
+          <DialogHeader className="space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-destructive/10 text-destructive flex items-center justify-center mx-auto mb-2">
+              <HugeiconsIcon icon={Delete02Icon} size={24} strokeWidth={2.5} />
+            </div>
+            <DialogTitle className="text-xl font-bold uppercase tracking-tight italic text-center">
+              Are you sure?
+            </DialogTitle>
+            <DialogDescription className="text-xs font-medium opacity-60 text-center px-2 leading-relaxed">
+              This will permanently delete the category{' '}
+              <span className="font-bold text-foreground">
+                "{categoryToDelete?.name}"
+              </span>{' '}
+              and all its associations.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2 pt-4">
+            <Button
+              variant="destructive"
+              onClick={handleDeleteCategory}
+              className="w-full h-12 rounded-2xl font-bold uppercase tracking-widest text-[11px] shadow-lg shadow-destructive/20"
+            >
+              Delete Category
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => setCategoryToDelete(null)}
+              className="w-full h-11 rounded-xl font-bold opacity-40 hover:opacity-100 transition-all"
+            >
+              Cancel
             </Button>
           </div>
-        </form>
+        </DialogContent>
+      </Dialog>
 
-        {/* Category List */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between px-2">
-            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-foreground/40">
-              Daftar Kategori
-            </h3>
-            <span className="text-[10px] font-bold text-primary bg-secondary/20 px-2 py-0.5 rounded-full">
-              {categories.length} Total
-            </span>
-          </div>
+      {/* Add Category Drawer */}
+      <Drawer open={isAdding} onOpenChange={setIsAdding}>
+        <DrawerContent>
+          <div className="mx-auto w-full max-w-md">
+            <DrawerHeader>
+              <DrawerTitle className="text-xl font-bold uppercase tracking-tight italic">
+                New Category
+              </DrawerTitle>
+            </DrawerHeader>
+            <form onSubmit={handleAddCategory} className="p-4 space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest opacity-40 px-1">
+                  Category Name
+                </label>
+                <Input
+                  autoFocus
+                  placeholder="e.g. Subscriptions, Coffee, Rent..."
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                  className="h-12 bg-secondary border-none rounded-2xl focus-visible:ring-1 focus-visible:ring-primary/30 font-semibold"
+                />
+              </div>
 
-          <div className="grid grid-cols-1 gap-3">
-            {categories.map((cat) => (
-              <Card
-                key={cat.id}
-                className="group bg-white border-secondary/50 p-4 rounded-2xl flex items-center justify-between hover:border-primary transition-all duration-300 shadow-sm"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-secondary/10 text-primary">
-                    <Tag size={18} strokeWidth={2.5} />
-                  </div>
-                  <p className="font-black uppercase tracking-tight text-foreground text-sm">
-                    {cat.name}
-                  </p>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest opacity-40 px-1">
+                  Select Icon
+                </label>
+                <div className="grid grid-cols-5 gap-2 max-h-40 overflow-y-auto p-1 scrollbar-hide">
+                  {AVAILABLE_ICONS.map(({ name, icon: icon }) => (
+                    <button
+                      key={name}
+                      type="button"
+                      onClick={() => setSelectedIcon(name)}
+                      className={cn(
+                        'aspect-square rounded-xl flex items-center justify-center transition-all',
+                        selectedIcon === name
+                          ? 'bg-primary text-primary-foreground scale-110 shadow-lg shadow-primary/20'
+                          : 'bg-secondary text-foreground/40 hover:bg-secondary/80',
+                      )}
+                    >
+                      <HugeiconsIcon icon={icon} size={20} />
+                    </button>
+                  ))}
                 </div>
+              </div>
 
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest opacity-40 px-1">
+                  Select Color
+                </label>
+                <div className="flex flex-wrap gap-3 p-1">
+                  {AVAILABLE_COLORS.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => setSelectedColor(color)}
+                      className={cn(
+                        'w-8 h-8 rounded-full transition-all flex items-center justify-center',
+                        color,
+                        selectedColor === color
+                          ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-110'
+                          : 'opacity-80 hover:opacity-100 hover:scale-105',
+                      )}
+                    >
+                      {selectedColor === color && (
+                        <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <Button
+                  type="submit"
+                  disabled={!newCategory.trim()}
+                  className="w-full h-14 rounded-2xl text-base font-bold uppercase tracking-widest shadow-xl shadow-primary/20"
+                >
+                  Create Category
+                </Button>
+              </div>
+            </form>
+            <DrawerFooter>
+              <DrawerClose asChild>
                 <Button
                   variant="ghost"
-                  size="icon"
-                  onClick={() =>
-                    cat.id && handleDeleteCategory(cat.id, cat.name)
-                  }
-                  className="h-8 w-8 text-foreground/10 hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                  className="rounded-xl font-bold opacity-40"
                 >
-                  <Trash2 size={16} />
+                  Cancel
                 </Button>
-              </Card>
-            ))}
+              </DrawerClose>
+            </DrawerFooter>
           </div>
-        </div>
-      </div>
+        </DrawerContent>
+      </Drawer>
+
+      {/* Decorative Blur */}
+      <div className="fixed bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent pointer-events-none" />
     </div>
   );
 };
-
-// Internal Label component since we're using shadcn ui labels usually,
-// but I'll import it properly if available or just use a div
-import { Label } from '@/components/ui/label';
 
 export default Categories;
