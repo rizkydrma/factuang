@@ -1,17 +1,27 @@
-import PageHeader from '@/components/PageHeader';
 import { DEFAULT_ICON, ICON_MAP } from '@/constants/icons';
 import { cn } from '@/lib/utils';
+import { useUserStore } from '@/store/userStore';
 import {
+  Invoice01Icon,
+  ViewIcon,
+  ViewOffIcon,
+  UserIcon,
   ArrowLeft01Icon,
   ArrowRight01Icon,
-  Delete02Icon,
-  Invoice01Icon,
-  UserIcon,
 } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import React, { useMemo, useState } from 'react';
 import { db } from '../db/database';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 // --- Constants & Utilities ---
 
@@ -27,11 +37,19 @@ const formatCurrency = (val: number) => {
 
 const Dashboard: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [isCensored, setIsCensored] = useState(false);
+  const [tempName, setTempName] = useState('');
+
+  const { userName, setUserName } = useUserStore();
+  const isNameModalOpen = userName === null;
 
   const monthYear = currentDate.toLocaleString('id-ID', {
     month: 'long',
     year: 'numeric',
   });
+
+  const liveCategories = useLiveQuery(() => db.categories.toArray());
+  const categories = useMemo(() => liveCategories || [], [liveCategories]);
 
   const liveTransactions = useLiveQuery(
     () =>
@@ -62,103 +80,250 @@ const Dashboard: React.FC = () => {
     setCurrentDate(nextDate);
   };
 
-  const handleDelete = async (id: number) => {
-    if (confirm('Hapus transaksi ini?')) {
-      await db.transactions.delete(id);
+  const handleSaveName = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (tempName.trim()) {
+      setUserName(tempName.trim());
     }
   };
 
-  return (
-    <div className="flex flex-col min-h-screen animate-in fade-in bg-background transition-colors duration-300">
-      <PageHeader
-        title="Factuang"
-        subtitle="Financial Overview"
-        leftAction={
-          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shadow-inner">
-            <HugeiconsIcon icon={UserIcon} size={20} />
-          </div>
+  // Aggregate category summaries
+  const categorySummaries = useMemo(() => {
+    const categoriesMap = new Map<string, (typeof categories)[0]>(
+      categories.map((c) => [c.name, c]),
+    );
+    const summaries: Record<
+      string,
+      {
+        total: number;
+        icon: React.ComponentProps<typeof HugeiconsIcon>['icon'];
+        color: string;
+      }
+    > = {};
+
+    transactions.forEach((t) => {
+      if (t.type === 'expense') {
+        if (!summaries[t.category]) {
+          const canonical = categoriesMap.get(t.category);
+          summaries[t.category] = {
+            total: 0,
+            icon: canonical?.icon
+              ? ICON_MAP[canonical.icon] || DEFAULT_ICON
+              : t.categoryIcon
+                ? ICON_MAP[t.categoryIcon] || DEFAULT_ICON
+                : DEFAULT_ICON,
+            color: canonical?.color || t.categoryColor || 'bg-slate-500',
+          };
         }
-      />
+        summaries[t.category].total += t.amount;
+      }
+    });
 
-      <main className="flex-1">
-        {/* Summary Section - Refined Premium Look */}
-        <section className="relative px-8 pt-8 pb-12 space-y-10 bg-card rounded-b-[2.5rem] shadow-sm border-b border-border/40 overflow-hidden">
-          {/* Subtle Background Glow Elements */}
-          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-primary/10 blur-[80px] rounded-full pointer-events-none" />
-          <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-48 h-48 bg-primary/5 blur-[60px] rounded-full pointer-events-none" />
+    return Object.entries(summaries)
+      .map(([name, data]) => ({ name, ...data }))
+      .sort((a, b) => b.total - a.total);
+  }, [transactions, categories]);
 
-          <div className="relative flex items-center justify-between mt-2">
-            <h2 className="text-[1.35rem] font-semibold tracking-tight capitalize text-foreground">
-              {monthYear}
-            </h2>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => changeMonth(-1)}
-                aria-label="Previous month"
-                className="p-2.5 bg-secondary/50 hover:bg-secondary rounded-full transition-colors flex items-center justify-center text-foreground active:scale-95 border border-border/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              >
-                <HugeiconsIcon
-                  icon={ArrowLeft01Icon}
-                  size={18}
-                  strokeWidth={2.5}
-                />
-              </button>
-              <button
-                onClick={() => changeMonth(1)}
-                aria-label="Next month"
-                className="p-2.5 bg-secondary/50 hover:bg-secondary rounded-full transition-colors flex items-center justify-center text-foreground active:scale-95 border border-border/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              >
-                <HugeiconsIcon
-                  icon={ArrowRight01Icon}
-                  size={18}
-                  strokeWidth={2.5}
-                />
-              </button>
-            </div>
+  // Group transactions by date
+  const groupedTransactions = useMemo(() => {
+    const groups: Record<string, typeof transactions> = {};
+    [...transactions].reverse().forEach((t) => {
+      const dateObj = new Date(t.date);
+      // Create stable key YYYY-MM-DD local time for grouping
+      const isoKey = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+      if (!groups[isoKey]) groups[isoKey] = [];
+      groups[isoKey].push(t);
+    });
+
+    // Sort keys descending (newest groups first)
+    return Object.entries(groups).sort(([keyA], [keyB]) =>
+      keyB.localeCompare(keyA),
+    );
+  }, [transactions]);
+
+  const categoriesMap = useMemo(
+    () => new Map(categories.map((c) => [c.name, c])),
+    [categories],
+  );
+
+  const formatGroupDate = (isoKey: string) => {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const yesterdayKey = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+
+    if (isoKey === todayKey) return 'Hari ini';
+    if (isoKey === yesterdayKey) return 'Kemarin';
+
+    const d = new Date(isoKey);
+    return d.toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  };
+
+  return (
+    <div className="flex flex-col min-h-screen bg-background">
+      {/* Top Section */}
+      <section className="bg-linear-150 from-primary to-primary/80 px-6 pt-12 pb-2 rounded-b-2xl shadow-sm flex flex-col space-y-8 text-primary-foreground relative overflow-hidden">
+        {/* Decorative Background for standard aesthetic */}
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-white/10 blur-[80px] rounded-full pointer-events-none" />
+
+        {/* Header - Name & Nav */}
+        <div className="flex items-center justify-between relative z-10 w-full pt-2">
+          <div className="flex-1 min-w-0 pr-4">
+            <h1 className="text-base font-semibold tracking-tight truncate">
+              Hi, {userName || '...'}
+            </h1>
           </div>
 
-          <div className="relative space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <div className="flex items-center gap-1 text-[11px] font-semibold shrink-0 bg-primary-foreground/10 backdrop-blur-md rounded-full px-1.5 py-0.5 border border-primary-foreground/20">
+            <button
+              onClick={() => changeMonth(-1)}
+              className="p-1 hover:bg-primary-foreground/20 rounded-full transition-colors active:scale-95 flex items-center justify-center"
+            >
+              <HugeiconsIcon
+                icon={ArrowLeft01Icon}
+                size={12}
+                strokeWidth={2.5}
+              />
+            </button>
+            <span className="w-[75px] text-center truncate">{monthYear}</span>
+            <button
+              onClick={() => changeMonth(1)}
+              className="p-1 hover:bg-primary-foreground/20 rounded-full transition-colors active:scale-95 flex items-center justify-center"
+            >
+              <HugeiconsIcon
+                icon={ArrowRight01Icon}
+                size={12}
+                strokeWidth={2.5}
+              />
+            </button>
+          </div>
+        </div>
+
+        {/* Total Expense */}
+        <div className="relative z-10 flex items-end justify-between w-full pb-2">
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-primary-foreground/90">
               Total Pengeluaran
             </p>
-            <p className="text-[2.75rem] font-bold tracking-tight text-foreground tabular-nums drop-shadow-sm leading-none">
-              {formatCurrency(totalExpense)}
+            <p className="text-[2rem] font-bold tracking-tight leading-none drop-shadow-sm tabular-nums">
+              {isCensored ? 'Rp ******' : formatCurrency(totalExpense)}
             </p>
           </div>
-        </section>
+          <button
+            onClick={() => setIsCensored(!isCensored)}
+            className="p-2 hover:bg-primary-foreground/10 rounded-full transition-colors mb-0.5 active:scale-95"
+            aria-label="Toggle visibility"
+          >
+            <HugeiconsIcon
+              icon={isCensored ? ViewOffIcon : ViewIcon}
+              size={24}
+              strokeWidth={1.5}
+            />
+          </button>
+        </div>
 
-        {/* Content Section Area */}
-        <div className="px-6 space-y-8 pb-32 pt-6">
-          <section className="space-y-4">
-            <div className="flex items-center justify-between px-2">
-              <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/80">
-                Transaksi Bulan Ini
-              </h3>
-              <span className="text-[10px] font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-primary/10">
-                {transactions.length} Item
-              </span>
+        {/* Category Slider - Moved Inside */}
+        <div className="relative z-20 w-full">
+          {categorySummaries.length > 0 ? (
+            <div className="overflow-x-auto hide-scrollbar -mx-6">
+              <div className="flex px-6 gap-4 pb-4 snap-x snap-mandatory">
+                {categorySummaries.map((cat, idx) => (
+                  <div
+                    key={idx}
+                    className="snap-start shrink-0 w-36 glass-card-sm rounded-xl p-4 flex flex-col justify-between"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div
+                        className={cn(
+                          'w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border border-white/10 shadow-sm transition-transform active:scale-90',
+                          cat.color,
+                          'text-white',
+                        )}
+                      >
+                        <HugeiconsIcon
+                          icon={cat.icon}
+                          size={18}
+                          strokeWidth={2}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-0.5 mt-2">
+                      <p className="text-xs font-semibold text-muted-foreground truncate">
+                        {cat.name}
+                      </p>
+                      <p className="text-sm font-bold  text-white tabular-nums truncate">
+                        {isCensored ? 'Rp ******' : formatCurrency(cat.total)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
+          ) : (
+            <div className="h-10" />
+          )}
+        </div>
+      </section>
 
-            <div className="bg-card rounded-[1.5rem] border border-border/40 overflow-hidden shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
-              <div className="divide-y divide-border/40">
-                {transactions.length > 0 ? (
-                  [...transactions].reverse().map((t) => {
-                    const icon = t.categoryIcon
-                      ? ICON_MAP[t.categoryIcon] || DEFAULT_ICON
-                      : DEFAULT_ICON;
-                    const colorClass = t.categoryColor || 'bg-slate-500';
+      <main className="flex-1 pb-32 pt-6 relative overflow-hidden">
+        {/* Decorative background elements for glass effect */}
+        <div className="absolute top-1/4 -left-20 w-80 h-80 bg-primary/5 dark:bg-primary/10 blur-[120px] rounded-full pointer-events-none" />
+        <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-primary/5 dark:bg-primary/10 blur-[120px] rounded-full pointer-events-none" />
+
+        {/* Transactions List */}
+        <div className="px-6 space-y-6">
+          {groupedTransactions.length > 0 ? (
+            groupedTransactions.map(([dateKey, txs]) => (
+              <div key={dateKey} className="space-y-3">
+                <div className="flex justify-between items-center px-1">
+                  <h3 className="text-[13px] font-semibold text-foreground/90 tracking-wide">
+                    {formatGroupDate(dateKey)}
+                  </h3>
+                  <span className="text-[11px] font-semibold text-foreground/80 px-2.5 py-1 glass-card-sm rounded-lg">
+                    {txs.length} Items
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  {txs.map((t) => {
+                    const canonical = categoriesMap.get(t.category);
+                    const icon = canonical?.icon
+                      ? ICON_MAP[canonical.icon] || DEFAULT_ICON
+                      : t.categoryIcon
+                        ? ICON_MAP[t.categoryIcon] || DEFAULT_ICON
+                        : DEFAULT_ICON;
+                    const colorClass =
+                      canonical?.color || t.categoryColor || 'bg-slate-500';
+                    const dateTimeString =
+                      new Date(t.date).toLocaleDateString('id-ID', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                      }) +
+                      ' ' +
+                      new Date(t.date).toLocaleTimeString('id-ID', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      });
 
                     return (
                       <div
                         key={t.id}
-                        className="group flex items-center justify-between py-4 px-4 hover:bg-secondary/40 transition-colors duration-200"
+                        className="glass-card rounded-[1.25rem] p-4 flex items-center justify-between relative overflow-hidden"
                       >
-                        <div className="flex items-center gap-4 min-w-0">
+                        <div className="flex items-center gap-3 min-w-0 pr-2">
+                          {/* Icon Box */}
                           <div
                             className={cn(
-                              'w-11 h-11 rounded-[1.15rem] flex items-center justify-center shrink-0 shadow-sm border border-border/10',
-                              colorClass.replace('bg-', 'bg-') + '/15',
-                              colorClass.replace('bg-', 'text-'),
+                              'w-[42px] h-[42px] rounded-xl border border-white/10 flex items-center justify-center shrink-0 shadow-sm transition-transform active:scale-95',
+                              colorClass,
+                              'text-white',
                             )}
                           >
                             <HugeiconsIcon
@@ -167,63 +332,93 @@ const Dashboard: React.FC = () => {
                               strokeWidth={2}
                             />
                           </div>
-                          <div className="min-w-0 space-y-0.5">
-                            <p className="text-[14px] font-semibold text-foreground leading-tight truncate">
-                              {t.category}
+
+                          <div className="min-w-0 flex flex-col justify-center">
+                            <p className="text-[14px] font-semibold text-foreground truncate">
+                              {t.note || t.category}
                             </p>
-                            <div className="flex items-center gap-1.5">
-                              <p className="text-[11px] text-muted-foreground font-medium whitespace-nowrap">
-                                {new Date(t.date).toLocaleDateString('id-ID', {
-                                  day: 'numeric',
-                                  month: 'short',
-                                })}
+                            <div className="flex items-center gap-1.5 mt-1">
+                              <p className="text-[10px] text-muted-foreground/90 font-medium">
+                                {dateTimeString}
                               </p>
-                              {t.note && (
-                                <span className="w-1 h-1 bg-border rounded-full" />
-                              )}
-                              {t.note && (
-                                <p className="text-[11px] text-muted-foreground/80 font-medium truncate max-w-[120px]">
-                                  {t.note}
-                                </p>
-                              )}
                             </div>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-4 shrink-0">
-                          <p className="text-[15px] font-semibold tracking-tight text-foreground tabular-nums">
-                            {formatCurrency(t.amount)}
+                        <div className="flex flex-col justify-center items-end shrink-0">
+                          <p className="text-[14px] font-bold text-foreground tabular-nums">
+                            {isCensored
+                              ? 'Rp ******'
+                              : formatCurrency(t.amount)}
                           </p>
-                          <button
-                            onClick={() => t.id && handleDelete(t.id)}
-                            aria-label={`Hapus transaksi ${t.category}`}
-                            className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-colors flex items-center justify-center active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive"
-                          >
-                            <HugeiconsIcon
-                              icon={Delete02Icon}
-                              size={16}
-                              strokeWidth={2}
-                            />
-                          </button>
+                          <p className="text-[10px] text-muted-foreground/90 font-medium mt-1 truncate text-right">
+                            {t.category}
+                          </p>
                         </div>
                       </div>
                     );
-                  })
-                ) : (
-                  <div className="py-16 text-center flex flex-col items-center justify-center gap-4 opacity-50">
-                    <div className="p-6 bg-secondary/50 rounded-full text-muted-foreground/60">
-                      <HugeiconsIcon icon={Invoice01Icon} size={32} />
-                    </div>
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      Belum ada transaksi
-                    </p>
-                  </div>
-                )}
+                  })}
+                </div>
               </div>
+            ))
+          ) : (
+            <div className="py-12 text-center flex flex-col items-center justify-center gap-4 opacity-50 mt-4">
+              <div className="p-5 bg-secondary/50 rounded-full text-muted-foreground/60">
+                <HugeiconsIcon icon={Invoice01Icon} size={28} />
+              </div>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Belum ada transaksi
+              </p>
             </div>
-          </section>
+          )}
         </div>
       </main>
+
+      {/* Mandatory Name Modal */}
+      <Dialog
+        open={isNameModalOpen}
+        onOpenChange={(open) => {
+          if (!open && isNameModalOpen) return;
+        }}
+      >
+        <DialogContent
+          showCloseButton={false}
+          className="max-w-sm rounded-[2rem] p-8"
+        >
+          <div className="flex flex-col items-center text-center">
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center text-primary mb-5 shadow-inner border border-primary/20">
+              <HugeiconsIcon icon={UserIcon} size={32} strokeWidth={2} />
+            </div>
+            <DialogHeader className="items-center">
+              <DialogTitle className="text-xl font-bold tracking-tight">
+                Selamat Datang!
+              </DialogTitle>
+              <DialogDescription className="text-sm leading-relaxed px-2">
+                Silakan masukkan nama panggilan kamu terlebih dahulu untuk mulai
+                menggunakan aplikasi.
+              </DialogDescription>
+            </DialogHeader>
+
+            <form onSubmit={handleSaveName} className="w-full space-y-4 pt-6">
+              <Input
+                required
+                placeholder="Nama kamu..."
+                value={tempName}
+                onChange={(e) => setTempName(e.target.value)}
+                className="h-12 rounded-xl text-center font-medium"
+                autoFocus
+              />
+              <Button
+                type="submit"
+                disabled={!tempName.trim()}
+                className="w-full h-12 rounded-xl text-sm font-bold"
+              >
+                Simpan & Lanjutkan
+              </Button>
+            </form>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

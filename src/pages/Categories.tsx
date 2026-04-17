@@ -20,6 +20,7 @@ import {
   Delete02Icon,
   Add01Icon,
   SparklesIcon,
+  PencilEdit01Icon,
 } from '@hugeicons/core-free-icons';
 import React, { useMemo, useState } from 'react';
 import { db, type Category } from '../db/database';
@@ -34,6 +35,7 @@ const Categories: React.FC = () => {
   const [selectedColor, setSelectedColor] = useState(DEFAULT_CATEGORY_COLOR);
   const [searchTerm, setSearchTerm] = useState('');
   const [isAdding, setIsAdding] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [categoryToDelete, setCategoryToDelete] = useState<{
     id: number;
     name: string;
@@ -50,23 +52,73 @@ const Categories: React.FC = () => {
     [categories, searchTerm],
   );
 
-  const handleAddCategory = async (e: React.FormEvent) => {
+  const handleSaveCategory = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCategory.trim()) return;
 
     try {
-      await db.categories.add({
-        name: newCategory.trim(),
-        icon: selectedIcon,
-        color: selectedColor,
-      });
-      setNewCategory('');
-      setSelectedIcon('Tag');
-      setSelectedColor(DEFAULT_CATEGORY_COLOR);
-      setIsAdding(false);
-    } catch {
+      if (editingId) {
+        const oldCat = categories.find((c) => c.id === editingId);
+        await db.transaction(
+          'rw',
+          [db.categories, db.transactions],
+          async () => {
+            await db.categories.update(editingId, {
+              name: newCategory.trim(),
+              icon: selectedIcon,
+              color: selectedColor,
+            });
+
+            // Sync with transactions if name changed
+            if (oldCat && oldCat.name !== newCategory.trim()) {
+              await db.transactions
+                .where('category')
+                .equals(oldCat.name)
+                .modify({
+                  category: newCategory.trim(),
+                  categoryColor: selectedColor,
+                  categoryIcon: selectedIcon,
+                });
+            } else {
+              // Update color and icon even if name didn't change
+              await db.transactions
+                .where('category')
+                .equals(newCategory.trim())
+                .modify({
+                  categoryColor: selectedColor,
+                  categoryIcon: selectedIcon,
+                });
+            }
+          },
+        );
+      } else {
+        await db.categories.add({
+          name: newCategory.trim(),
+          icon: selectedIcon,
+          color: selectedColor,
+        });
+      }
+      resetForm();
+    } catch (err) {
+      console.error(err);
       alert('Kategori sudah ada atau terjadi kesalahan.');
     }
+  };
+
+  const resetForm = () => {
+    setNewCategory('');
+    setSelectedIcon('Tag');
+    setSelectedColor(DEFAULT_CATEGORY_COLOR);
+    setIsAdding(false);
+    setEditingId(null);
+  };
+
+  const handleEditClick = (cat: Category) => {
+    setEditingId(cat.id || null);
+    setNewCategory(cat.name);
+    setSelectedIcon(cat.icon || 'Tag');
+    setSelectedColor(cat.color || DEFAULT_CATEGORY_COLOR);
+    setIsAdding(true);
   };
 
   const getIconComponent = (name: string) => {
@@ -87,20 +139,6 @@ const Categories: React.FC = () => {
 
     await db.categories.delete(id);
     setCategoryToDelete(null);
-  };
-
-  const getCategoryColor = (cat: Category) => {
-    if (cat.color) return `${cat.color}/10 text-${cat.color.split('-')[1]}-500`;
-
-    const colors = AVAILABLE_COLORS.map(
-      (c) => `${c}/10 text-${c.split('-')[1]}-500`,
-    );
-    let hash = 0;
-    const name = cat.name || '';
-    for (let i = 0; i < name.length; i++) {
-      hash = name.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    return colors[Math.abs(hash) % colors.length];
   };
 
   return (
@@ -127,44 +165,49 @@ const Categories: React.FC = () => {
                   <motion.div
                     layout
                     key={cat.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="group relative bg-card border border-border/40 rounded-xl p-4 flex items-center justify-between hover:border-primary/30 transition-all cursor-default shadow-sm"
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.98 }}
+                    className="group relative glass-card-sm rounded-xl p-3 flex items-center justify-between hover:border-primary/30 transition-all cursor-default"
                   >
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
                       <div
                         className={cn(
-                          'w-12 h-12 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 shadow-sm',
-                          getCategoryColor(cat),
+                          'w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 shadow-sm',
+                          cat.color || DEFAULT_CATEGORY_COLOR,
+                          'text-white',
                         )}
                       >
-                        <HugeiconsIcon
-                          icon={icon}
-                          size={20}
-                          strokeWidth={2.5}
-                        />
+                        <HugeiconsIcon icon={icon} size={18} strokeWidth={2} />
                       </div>
 
                       <div className="space-y-0.5">
-                        <p className="font-bold text-sm uppercase tracking-tight">
+                        <p className="font-bold text-[13px] uppercase tracking-tight">
                           {cat.name}
                         </p>
-                        <p className="text-[10px] font-medium opacity-30 uppercase tracking-widest">
+                        <p className="text-[9px] font-bold opacity-30 uppercase tracking-[0.15em]">
                           Ref #{cat.id}
                         </p>
                       </div>
                     </div>
 
-                    <button
-                      onClick={() =>
-                        cat.id &&
-                        setCategoryToDelete({ id: cat.id, name: cat.name })
-                      }
-                      className="p-2.5 rounded-xl text-foreground/10 group-hover:text-destructive group-hover:bg-destructive/5 transition-all active:scale-90 flex items-center justify-center"
-                    >
-                      <HugeiconsIcon icon={Delete02Icon} size={16} />
-                    </button>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => handleEditClick(cat)}
+                        className="p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all active:scale-90 flex items-center justify-center"
+                      >
+                        <HugeiconsIcon icon={PencilEdit01Icon} size={14} />
+                      </button>
+                      <button
+                        onClick={() =>
+                          cat.id &&
+                          setCategoryToDelete({ id: cat.id, name: cat.name })
+                        }
+                        className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all active:scale-90 flex items-center justify-center"
+                      >
+                        <HugeiconsIcon icon={Delete02Icon} size={14} />
+                      </button>
+                    </div>
                   </motion.div>
                 );
               })
@@ -230,15 +273,21 @@ const Categories: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      <Drawer open={isAdding} onOpenChange={setIsAdding}>
+      <Drawer
+        open={isAdding}
+        onOpenChange={(open) => {
+          setIsAdding(open);
+          if (!open) resetForm();
+        }}
+      >
         <DrawerContent className="bg-card text-foreground">
           <div className="mx-auto w-full max-w-md text-foreground">
             <DrawerHeader>
               <DrawerTitle className="text-xl font-bold uppercase tracking-tight italic">
-                New Category
+                {editingId ? 'Edit Category' : 'New Category'}
               </DrawerTitle>
             </DrawerHeader>
-            <form onSubmit={handleAddCategory} className="p-4 space-y-6">
+            <form onSubmit={handleSaveCategory} className="p-4 space-y-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-widest opacity-40 px-1">
                   Category Name
@@ -307,7 +356,7 @@ const Categories: React.FC = () => {
                   disabled={!newCategory.trim()}
                   className="w-full h-14 rounded-2xl text-base font-bold uppercase tracking-widest shadow-xl shadow-primary/30"
                 >
-                  Create Category
+                  {editingId ? 'Update Category' : 'Create Category'}
                 </Button>
               </div>
             </form>

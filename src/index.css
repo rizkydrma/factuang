@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Noto Sans', system-ui, -apple-system, sans-serif;
 }
 
 :root {
@@ -13,6 +13,8 @@
   --background: #f8fafc;
   /* Teks utama (Slate 900) */
   --foreground: #0f172a;
+
+  --font-sans: 'Noto Sans', system-ui, -apple-system, sans-serif;
 
   /* Kartu berwarna putih murni untuk memberikan kontras elevation */
   --card: #ffffff;
@@ -105,7 +107,7 @@ input[type='number']::-webkit-outer-spin-button {
 
 @theme inline {
   --font-heading: var(--font-sans);
-  --font-sans: 'Inter', sans-serif;
+  --font-sans: 'Noto Sans', sans-serif;
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -139,5 +141,15 @@ input[type='number']::-webkit-outer-spin-button {
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .glass-card {
+    @apply bg-white/40 dark:bg-slate-950/40 backdrop-blur-2xl border border-white/30 dark:border-white/10 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] transition-all duration-300;
+  }
+
+  .glass-card-sm {
+    @apply bg-white/20 dark:bg-slate-900/40 backdrop-blur-xl border border-white/20 dark:border-white/5 shadow-sm transition-all duration-300;
   }
 }
