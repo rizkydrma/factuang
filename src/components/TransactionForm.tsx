@@ -144,7 +144,7 @@ const TransactionForm: React.FC = () => {
       open={isAddModalOpen}
       onOpenChange={(open) => !open && closeAddModal()}
     >
-      <DrawerContent className="bg-background max-w-120 mx-auto rounded-t-[32px] border-border shadow-2xl flex flex-col overflow-hidden max-h-[94vh]">
+      <DrawerContent className="bg-background max-w-120 mx-auto rounded-t-2xl border-border shadow-2xl flex flex-col overflow-hidden max-h-[94vh]">
         <DrawerHeader className="px-8 py-4 flex flex-row items-center justify-between border-b border-secondary/10 shrink-0">
           <div className="space-y-0.5">
             <DrawerTitle className="text-base font-black uppercase tracking-tighter text-foreground text-left">
@@ -270,7 +270,7 @@ const TransactionForm: React.FC = () => {
           </div>
 
           {/* 3. Calculator Keypad */}
-          <div className="space-y-3 bg-secondary/5 p-4 rounded-2xl border border-secondary/10">
+          <div className="space-y-3 bg-secondary/5 p-4 rounded-xl border border-secondary/10">
             <div className="grid grid-cols-4 gap-2">
               {['7', '8', '9', '/'].map((k) => (
                 <Button

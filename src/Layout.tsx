@@ -59,7 +59,7 @@ const Layout: React.FC = () => {
             <Button
               onClick={openAddModal}
               size="icon"
-              className="w-16 h-16 rounded-full shadow-[0_8px_30px_rgb(25,167,206,0.4)] bg-primary hover:bg-base text-primary-foreground border-4 border-background transition-all active:scale-90"
+              className="w-16 h-16 rounded-2xl shadow-lg bg-primary hover:bg-base text-primary-foreground border-4 border-background transition-all active:scale-90"
               aria-label="Add Transaction"
             >
               <HugeiconsIcon icon={Add01Icon} size={32} strokeWidth={3} />

@@ -148,7 +148,7 @@ const Settings: React.FC = () => {
           <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-foreground/30 ml-1">
             Data Management
           </h3>
-          <Card className="bg-card border-border rounded-[32px] overflow-hidden shadow-sm">
+          <Card className="bg-card border-border rounded-2xl overflow-hidden shadow-sm">
             <div className="divide-y divide-border/50">
               <button
                 onClick={exportToCSV}
@@ -218,7 +218,7 @@ const Settings: React.FC = () => {
           <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-foreground/30 ml-1">
             Appearance
           </h3>
-          <Card className="bg-card border-border rounded-[32px] overflow-hidden shadow-sm">
+          <Card className="bg-card border-border rounded-2xl overflow-hidden shadow-sm">
             <button
               onClick={toggleTheme}
               className="w-full px-6 py-5 flex items-center justify-between hover:bg-secondary transition-colors text-left"
@@ -258,8 +258,8 @@ const Settings: React.FC = () => {
           <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-foreground/30 ml-1">
             About App
           </h3>
-          <Card className="bg-card border-border rounded-[32px] p-8 shadow-sm flex flex-col items-center text-center space-y-5">
-            <div className="p-5 rounded-[2rem] bg-primary/10 text-primary">
+          <Card className="bg-card border-border rounded-2xl p-8 shadow-sm flex flex-col items-center text-center space-y-5">
+            <div className="p-5 rounded-2xl bg-primary/10 text-primary">
               <HugeiconsIcon icon={InformationCircleIcon} size={40} />
             </div>
             <div className="space-y-1">

@@ -94,7 +94,7 @@ const Transactions: React.FC = () => {
             transactions.map((t) => (
               <Card
                 key={t.id}
-                className="group relative bg-card border border-border/50 p-5 rounded-[2rem] flex items-center justify-between hover:border-primary/20 transition-all duration-300 shadow-sm"
+                className="group relative bg-card border border-border/50 p-5 rounded-2xl flex items-center justify-between hover:border-primary/20 transition-all duration-300 shadow-sm"
               >
                 <div className="flex items-center gap-4">
                   <div className="p-3 rounded-2xl bg-secondary text-primary">
@@ -141,7 +141,7 @@ const Transactions: React.FC = () => {
             ))
           ) : (
             <div className="py-20 flex flex-col items-center justify-center text-foreground/10 space-y-4">
-              <div className="p-8 bg-card border border-border/50 rounded-[2.5rem] shadow-sm">
+              <div className="p-8 bg-card border border-border/50 rounded-3xl shadow-sm">
                 <HugeiconsIcon icon={Search01Icon} size={48} strokeWidth={1} />
               </div>
               <p className="text-[10px] font-black uppercase tracking-[0.3em]">

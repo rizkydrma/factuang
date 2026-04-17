@@ -150,7 +150,7 @@ const Dashboard: React.FC = () => {
               [...transactions].reverse().map((t) => (
                 <div
                   key={t.id}
-                  className="group relative bg-card border border-border/50 p-4 rounded-3xl flex items-center justify-between shadow-sm hover:shadow-md hover:border-primary/20 transition-all duration-300"
+                  className="group relative bg-card border border-border/50 p-4 rounded-2xl flex items-center justify-between shadow-sm hover:shadow-md hover:border-primary/20 transition-all duration-300"
                 >
                   <div className="flex items-center gap-4">
                     <div className="p-3 rounded-2xl bg-secondary text-primary">
@@ -197,7 +197,7 @@ const Dashboard: React.FC = () => {
                 </div>
               ))
             ) : (
-              <div className="py-16 text-center border-2 border-dashed border-border/50 rounded-[40px] flex flex-col items-center justify-center gap-3">
+              <div className="py-16 text-center border-2 border-dashed border-border/50 rounded-3xl flex flex-col items-center justify-center gap-3">
                 <div className="p-4 rounded-full bg-secondary/50 text-foreground/10">
                   <HugeiconsIcon icon={Invoice01Icon} size={32} />
                 </div>

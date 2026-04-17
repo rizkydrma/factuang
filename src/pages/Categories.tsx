@@ -243,7 +243,7 @@ const Categories: React.FC = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="group relative bg-card border border-border rounded-2xl p-4 flex items-center justify-between hover:border-primary/30 hover:shadow-xl hover:shadow-black/5 transition-all cursor-default"
+                    className="group relative bg-card border border-border rounded-xl p-4 flex items-center justify-between hover:border-primary/30 hover:shadow-xl hover:shadow-black/5 transition-all cursor-default"
                   >
                     <div className="flex items-center gap-4">
                       <div
@@ -298,7 +298,7 @@ const Categories: React.FC = () => {
         open={!!categoryToDelete}
         onOpenChange={(open) => !open && setCategoryToDelete(null)}
       >
-        <DialogContent className="max-w-[320px] rounded-3xl border-none shadow-2xl">
+        <DialogContent className="max-w-[320px] rounded-2xl border-none shadow-2xl">
           <DialogHeader className="space-y-3">
             <div className="w-12 h-12 rounded-2xl bg-destructive/10 text-destructive flex items-center justify-center mx-auto mb-2">
               <HugeiconsIcon icon={Delete02Icon} size={24} strokeWidth={2.5} />
