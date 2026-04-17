@@ -4,10 +4,7 @@ import { db, type Transaction } from '../db/database';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
   Delete02Icon,
-  Search01Icon,
   Invoice01Icon,
-  ArrowLeft01Icon,
-  Cancel01Icon,
   FilterIcon,
   Tag01Icon,
   SpoonAndForkIcon,
@@ -28,13 +25,13 @@ import {
   GlobeIcon,
   Joystick01Icon,
   Certificate01Icon,
+  Search01Icon,
 } from '@hugeicons/core-free-icons';
-import { Input } from '@/components/ui/input';
-import { useNavigate } from 'react-router-dom';
+import SearchBar from '@/components/SearchBar';
+import PageHeader from '@/components/PageHeader';
 import { cn } from '@/lib/utils';
 
-// --- Types & Constants ---
-
+// --- Constants & Utilities ---
 const ICON_MAP: Record<string, any> = {
   Utensils: SpoonAndForkIcon,
   Car: Car01Icon,
@@ -57,8 +54,6 @@ const ICON_MAP: Record<string, any> = {
   Music: MusicNote01Icon,
   Globe: GlobeIcon,
 };
-
-// --- Utilities ---
 
 const formatCurrency = (val: number) => {
   return new Intl.NumberFormat('id-ID', {
@@ -127,7 +122,7 @@ const TransactionRow: React.FC<{
         </p>
         <button
           onClick={() => t.id && onDelete(t.id)}
-          className="p-2 rounded-lg text-foreground/20 hover:text-destructive hover:bg-destructive/10 transition-all flex items-center justify-center active:scale-90"
+          className="p-1.5 rounded-lg text-foreground/20 hover:text-destructive hover:bg-destructive/10 transition-all active:scale-90"
         >
           <HugeiconsIcon icon={Delete02Icon} size={14} />
         </button>
@@ -139,10 +134,8 @@ const TransactionRow: React.FC<{
 // --- Main Page Component ---
 
 const Transactions: React.FC = () => {
-  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Data Fetching
   const transactions =
     useLiveQuery(
       () =>
@@ -157,7 +150,6 @@ const Transactions: React.FC = () => {
       [searchTerm],
     ) || [];
 
-  // Grouping Logic
   const groupedTransactions = useMemo(() => {
     return transactions.reduce(
       (groups, t) => {
@@ -183,68 +175,33 @@ const Transactions: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background transition-colors duration-300">
-      {/* Editorial Header */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border px-6 pt-8 pb-5">
-        <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/')}
-              className="p-2 hover:bg-secondary rounded-full text-foreground/60 transition-colors flex items-center justify-center"
-            >
-              <HugeiconsIcon icon={ArrowLeft01Icon} size={20} />
-            </button>
-            <div>
-              <h1 className="text-xl font-black uppercase tracking-tighter italic leading-none">
-                History
-              </h1>
-              <p className="text-[9px] font-bold opacity-30 uppercase tracking-[0.2em] mt-1">
-                Records Found: {transactions.length}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-full border border-primary/5">
-            <HugeiconsIcon
-              icon={FilterIcon}
-              size={12}
-              className="text-primary"
-            />
-            <span className="text-[10px] font-black text-primary uppercase tracking-widest leading-none">
+      <PageHeader
+        title="History"
+        subtitle={`${transactions.length} Records Found`}
+        showBack
+        rightAction={
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-white/20 rounded-full border border-white/10 text-white">
+            <HugeiconsIcon icon={FilterIcon} size={12} />
+            <span className="text-[10px] font-black uppercase tracking-widest leading-none">
               {formatCurrency(totalFiltered)}
             </span>
           </div>
-        </div>
+        }
+      />
 
-        {/* Search Bar */}
-        <div className="relative group">
-          <HugeiconsIcon
-            icon={Search01Icon}
-            size={14}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground/30 group-focus-within:text-primary transition-colors"
-          />
-          <Input
-            placeholder="Search category or notes..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-11 h-11 bg-secondary/30 border-transparent rounded-2xl text-[11px] font-bold focus-visible:ring-primary/20 shadow-none placeholder:text-foreground/20"
-          />
-          {searchTerm && (
-            <button
-              onClick={() => setSearchTerm('')}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground/20 hover:text-foreground transition-colors"
-            >
-              <HugeiconsIcon icon={Cancel01Icon} size={14} />
-            </button>
-          )}
-        </div>
-      </header>
-
-      {/* Main Content */}
       <main className="flex-1 p-6 pb-32">
+        <div className="mb-8">
+          <SearchBar
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder="Search records..."
+          />
+        </div>
+
         {transactions.length > 0 ? (
           <div className="space-y-10">
             {Object.entries(groupedTransactions).map(([date, items]) => (
               <div key={date} className="space-y-4">
-                {/* Date Divider */}
                 <div className="flex items-center gap-4 px-2">
                   <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/30 whitespace-nowrap">
                     {formatDateHeader(date)}
@@ -252,7 +209,6 @@ const Transactions: React.FC = () => {
                   <div className="h-px bg-border/40 w-full" />
                 </div>
 
-                {/* List Container */}
                 <div className="bg-card/40 rounded-[1.5rem] border border-border/10 overflow-hidden shadow-sm shadow-black/[0.02]">
                   <div className="divide-y divide-border/10">
                     {items.map((t) => (

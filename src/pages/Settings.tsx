@@ -1,6 +1,5 @@
 import React from 'react';
 import { db } from '../db/database';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
@@ -10,14 +9,12 @@ import {
   Sun01Icon,
   Delete02Icon,
   InformationCircleIcon,
-  ArrowLeft01Icon,
 } from '@hugeicons/core-free-icons';
-import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/hooks/useTheme';
+import PageHeader from '@/components/PageHeader';
 
 const Settings: React.FC = () => {
-  const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
 
   const exportToCSV = async () => {
@@ -120,27 +117,7 @@ const Settings: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen animate-in fade-in duration-700 pb-20 bg-background text-foreground transition-colors duration-300">
-      {/* Page Header */}
-      <header className="px-8 pt-10 pb-6 flex items-center justify-between border-b border-border bg-background">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate('/')}
-            className="rounded-full hover:bg-secondary"
-          >
-            <HugeiconsIcon icon={ArrowLeft01Icon} size={24} strokeWidth={2.5} />
-          </Button>
-          <div className="space-y-0.5">
-            <h2 className="text-xl font-black uppercase tracking-tighter">
-              Settings
-            </h2>
-            <p className="text-[10px] text-primary font-black uppercase tracking-[0.2em]">
-              Preferences & Data
-            </p>
-          </div>
-        </div>
-      </header>
+      <PageHeader title="Settings" subtitle="Preferences & Data" showBack />
 
       <div className="flex-1 p-6 space-y-8">
         {/* Data Section */}
@@ -193,21 +170,10 @@ const Settings: React.FC = () => {
 
               <button
                 onClick={resetAllData}
-                className="w-full px-6 py-5 flex items-center justify-between hover:bg-destructive/5 transition-colors text-left group"
+                className="w-full px-6 py-5 flex items-center justify-center bg-destructive/5 hover:bg-destructive text-destructive hover:text-white transition-all py-4 font-black uppercase tracking-widest text-[10px]"
               >
-                <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-2xl bg-destructive/10 text-destructive group-hover:bg-destructive group-hover:text-white transition-colors">
-                    <HugeiconsIcon icon={Delete02Icon} size={20} />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold uppercase tracking-tight text-destructive">
-                      Reset & Delete All
-                    </p>
-                    <p className="text-[10px] opacity-50 font-medium">
-                      Wipe all application data
-                    </p>
-                  </div>
-                </div>
+                <HugeiconsIcon icon={Delete02Icon} size={16} className="mr-2" />
+                Reset & Delete All Data
               </button>
             </div>
           </Card>
@@ -258,7 +224,7 @@ const Settings: React.FC = () => {
           <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-foreground/30 ml-1">
             About App
           </h3>
-          <Card className="bg-card border-border rounded-2xl p-8 shadow-sm flex flex-col items-center text-center space-y-5">
+          <Card className="bg-card border-border rounded-2xl p-8 shadow-sm flex flex-col items-center text-center space-y-5 text-card-foreground">
             <div className="p-5 rounded-2xl bg-primary/10 text-primary">
               <HugeiconsIcon icon={InformationCircleIcon} size={40} />
             </div>

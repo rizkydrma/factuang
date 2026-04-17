@@ -14,7 +14,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -24,7 +23,6 @@ import {
   Briefcase01Icon,
   Camera01Icon,
   Car01Icon,
-  ArrowLeft01Icon,
   Coffee01Icon,
   Dumbbell01Icon,
   Joystick01Icon,
@@ -38,18 +36,17 @@ import {
   Airplane01Icon,
   Add01Icon,
   Invoice01Icon,
-  Search01Icon,
   ShoppingBag01Icon,
   SparklesIcon,
   Tag01Icon,
   Delete02Icon,
   SpoonAndForkIcon,
-  Cancel01Icon,
   FlashIcon,
 } from '@hugeicons/core-free-icons';
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { db, type Category } from '../db/database';
+import PageHeader from '@/components/PageHeader';
+import SearchBar from '@/components/SearchBar';
 
 const AVAILABLE_ICONS = [
   { name: 'Utensils', icon: SpoonAndForkIcon },
@@ -88,7 +85,6 @@ const AVAILABLE_COLORS = [
 ];
 
 const Categories: React.FC = () => {
-  const navigate = useNavigate();
   const [newCategory, setNewCategory] = useState('');
   const [selectedIcon, setSelectedIcon] = useState('Tag');
   const [selectedColor, setSelectedColor] = useState('bg-indigo-500');
@@ -166,69 +162,31 @@ const Categories: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 transition-colors duration-300">
-      {/* Editorial Header */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3">
-        <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate(-1)}
-              className="p-2 hover:bg-secondary rounded-full transition-colors group flex items-center justify-center"
-            >
-              <HugeiconsIcon
-                icon={ArrowLeft01Icon}
-                size={20}
-                className="group-active:-translate-x-1 transition-transform"
-              />
-            </button>
-            <div>
-              <h1 className="text-lg font-bold tracking-tight leading-none uppercase italic">
-                Categories
-              </h1>
-              <p className="text-[10px] font-medium opacity-40 uppercase tracking-widest mt-1">
-                {categories.length} Total items
-              </p>
-            </div>
-          </div>
+      <PageHeader
+        title="Categories"
+        subtitle={`${categories.length} Total Items`}
+        showBack
+        rightAction={
+          <button
+            onClick={() => setIsAdding(!isAdding)}
+            className={cn(
+              'p-2.5 rounded-2xl transition-all duration-300 flex items-center justify-center shadow-sm',
+              isAdding
+                ? 'bg-destructive text-destructive-foreground rotate-45'
+                : 'bg-white/20 text-white border border-white/10 hover:bg-white/30',
+            )}
+          >
+            <HugeiconsIcon icon={Add01Icon} size={18} strokeWidth={2.5} />
+          </button>
+        }
+      />
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsAdding(!isAdding)}
-              className={cn(
-                'p-2.5 rounded-full transition-all duration-300 flex items-center justify-center',
-                isAdding
-                  ? 'bg-destructive text-destructive-foreground rotate-45'
-                  : 'bg-primary text-primary-foreground shadow-lg shadow-primary/20',
-              )}
-            >
-              <HugeiconsIcon icon={Add01Icon} size={18} strokeWidth={2.5} />
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-2xl mx-auto px-4 pt-6 pb-24 space-y-6">
-        {/* Search & Filter - Compact */}
-        <div className="relative group">
-          <HugeiconsIcon
-            icon={Search01Icon}
-            size={14}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground/30"
-          />
-          <Input
-            placeholder="Quick search..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 h-10 bg-card border-border rounded-full text-sm font-medium focus-visible:ring-primary/20"
-          />
-          {searchTerm && (
-            <button
-              onClick={() => setSearchTerm('')}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground/30 hover:text-foreground"
-            >
-              <HugeiconsIcon icon={Cancel01Icon} size={14} />
-            </button>
-          )}
-        </div>
+      <main className="max-w-2xl mx-auto px-6 pt-6 pb-24 space-y-8">
+        <SearchBar
+          value={searchTerm}
+          onChange={setSearchTerm}
+          placeholder="Quick search..."
+        />
 
         {/* Categories Stack */}
         <section className="flex flex-col gap-3">
@@ -243,12 +201,12 @@ const Categories: React.FC = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="group relative bg-card border border-border rounded-xl p-4 flex items-center justify-between hover:border-primary/30 hover:shadow-xl hover:shadow-black/5 transition-all cursor-default"
+                    className="group relative bg-card border border-border/40 rounded-xl p-4 flex items-center justify-between hover:border-primary/30 hover:shadow-xl hover:shadow-black/5 transition-all cursor-default"
                   >
                     <div className="flex items-center gap-4">
                       <div
                         className={cn(
-                          'w-12 h-12 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105',
+                          'w-12 h-12 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 shadow-sm',
                           getCategoryColor(cat),
                         )}
                       >
@@ -298,7 +256,7 @@ const Categories: React.FC = () => {
         open={!!categoryToDelete}
         onOpenChange={(open) => !open && setCategoryToDelete(null)}
       >
-        <DialogContent className="max-w-[320px] rounded-2xl border-none shadow-2xl">
+        <DialogContent className="max-w-[320px] rounded-2xl border-none shadow-2xl bg-card text-foreground">
           <DialogHeader className="space-y-3">
             <div className="w-12 h-12 rounded-2xl bg-destructive/10 text-destructive flex items-center justify-center mx-auto mb-2">
               <HugeiconsIcon icon={Delete02Icon} size={24} strokeWidth={2.5} />
@@ -335,8 +293,8 @@ const Categories: React.FC = () => {
 
       {/* Add Category Drawer */}
       <Drawer open={isAdding} onOpenChange={setIsAdding}>
-        <DrawerContent>
-          <div className="mx-auto w-full max-w-md">
+        <DrawerContent className="bg-card text-foreground">
+          <div className="mx-auto w-full max-w-md text-foreground">
             <DrawerHeader>
               <DrawerTitle className="text-xl font-bold uppercase tracking-tight italic">
                 New Category
@@ -347,12 +305,12 @@ const Categories: React.FC = () => {
                 <label className="text-[10px] font-bold uppercase tracking-widest opacity-40 px-1">
                   Category Name
                 </label>
-                <Input
+                <input
                   autoFocus
                   placeholder="e.g. Subscriptions, Coffee, Rent..."
                   value={newCategory}
                   onChange={(e) => setNewCategory(e.target.value)}
-                  className="h-12 bg-secondary border-none rounded-2xl focus-visible:ring-1 focus-visible:ring-primary/30 font-semibold"
+                  className="w-full h-12 px-4 bg-secondary/50 border-none rounded-2xl focus:ring-1 focus:ring-primary/30 font-semibold outline-none"
                 />
               </div>
 

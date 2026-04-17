@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
   Cancel01Icon,
-  ArrowRight01Icon,
   Delete02Icon,
   ArrowDown01Icon,
   Mic01Icon,
   Loading03Icon,
+  Tick01Icon,
 } from '@hugeicons/core-free-icons';
+import { motion, AnimatePresence } from 'framer-motion';
 import { db } from '../db/database';
 import { useUIStore } from '../store/uiStore';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,29 @@ import {
   DrawerTitle,
 } from '@/components/ui/drawer';
 import { useLiveQuery } from 'dexie-react-hooks';
+import { cn } from '@/lib/utils';
+
+// --- Sub-components ---
+
+const VoiceWaveform: React.FC = () => (
+  <div className="flex items-center justify-center gap-1 h-8">
+    {[1, 2, 3, 4, 5].map((i) => (
+      <motion.div
+        key={i}
+        className="w-1 bg-primary rounded-full"
+        animate={{
+          height: [12, 28, 16, 24, 12],
+        }}
+        transition={{
+          duration: 0.6,
+          repeat: Infinity,
+          delay: i * 0.1,
+          ease: 'easeInOut',
+        }}
+      />
+    ))}
+  </div>
+);
 
 const TransactionForm: React.FC = () => {
   const { isAddModalOpen, closeAddModal } = useUIStore();
@@ -89,7 +113,6 @@ const TransactionForm: React.FC = () => {
     const recognition = new SpeechRecognition();
     recognition.lang = 'id-ID';
     recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
 
     recognition.onstart = () => setIsListening(true);
     recognition.onend = () => setIsListening(false);
@@ -105,8 +128,6 @@ const TransactionForm: React.FC = () => {
 
   const processVoiceTranscript = (text: string) => {
     setIsParsing(true);
-
-    // Purely local parsing logic using regex
     const amountMatch = text.match(/\d+/g);
     const amount = amountMatch ? amountMatch.join('') : '0';
 
@@ -115,10 +136,7 @@ const TransactionForm: React.FC = () => {
       setNote(text);
     }
 
-    // Small delay for UX feedback
-    setTimeout(() => {
-      setIsParsing(false);
-    }, 800);
+    setTimeout(() => setIsParsing(false), 1000);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -148,103 +166,131 @@ const TransactionForm: React.FC = () => {
       open={isAddModalOpen}
       onOpenChange={(open) => !open && closeAddModal()}
     >
-      <DrawerContent className="bg-background max-w-120 mx-auto rounded-t-2xl border-border shadow-2xl flex flex-col overflow-hidden max-h-[94vh]">
-        <DrawerHeader className="px-8 py-4 flex flex-row items-center justify-between border-b border-secondary/10 shrink-0">
+      <DrawerContent className="bg-background max-w-120 mx-auto rounded-t-[2.5rem] border-border shadow-2xl flex flex-col overflow-hidden max-h-[96vh] transition-colors duration-500">
+        {/* Immersive Voice Overlay */}
+        <AnimatePresence>
+          {isListening && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-[60] bg-primary flex flex-col items-center justify-center text-white p-8 space-y-8"
+            >
+              <div className="space-y-2 text-center">
+                <h2 className="text-2xl font-black uppercase tracking-tighter italic">
+                  Listening...
+                </h2>
+                <p className="text-xs font-bold opacity-60 uppercase tracking-widest text-white/80">
+                  Katakan jumlah dan catatan
+                </p>
+              </div>
+
+              <div className="relative">
+                <motion.div
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="absolute inset-0 bg-white/20 rounded-full blur-3xl"
+                />
+                <div className="relative bg-white text-primary p-8 rounded-full shadow-2xl">
+                  <HugeiconsIcon icon={Mic01Icon} size={48} />
+                </div>
+              </div>
+
+              <VoiceWaveform />
+
+              <Button
+                onClick={() => setIsListening(false)}
+                variant="outline"
+                className="rounded-full border-white/20 bg-white/10 hover:bg-white/20 text-white border-2 font-bold uppercase tracking-widest px-8"
+              >
+                Cancel
+              </Button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <DrawerHeader className="px-8 pt-8 pb-4 flex flex-row items-center justify-between shrink-0">
           <div className="space-y-0.5">
-            <DrawerTitle className="text-base font-black uppercase tracking-tighter text-foreground text-left">
+            <DrawerTitle className="text-xl font-black uppercase tracking-tighter italic leading-none">
               New Record
             </DrawerTitle>
-            <p className="text-[9px] text-primary font-black uppercase tracking-[0.1em] text-left">
-              Details Entry
+            <p className="text-[10px] text-primary font-black uppercase tracking-[0.2em]">
+              Manual or Voice Entry
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            {isParsing && (
-              <HugeiconsIcon
-                icon={Loading03Icon}
-                size={16}
-                className="animate-spin text-primary"
-              />
-            )}
-            <DrawerClose asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="bg-secondary/10 text-foreground/30 hover:text-primary rounded-full h-8 w-8 flex items-center justify-center"
-              >
-                <HugeiconsIcon icon={Cancel01Icon} size={14} strokeWidth={3} />
-              </Button>
-            </DrawerClose>
-          </div>
+          <DrawerClose asChild>
+            <button className="p-2 bg-secondary rounded-full text-foreground/40 hover:text-primary transition-colors">
+              <HugeiconsIcon icon={Cancel01Icon} size={20} strokeWidth={2.5} />
+            </button>
+          </DrawerClose>
         </DrawerHeader>
 
         <form
           onSubmit={handleSubmit}
-          className="flex-1 overflow-y-auto p-8 space-y-8 pb-12 scrollbar-hide"
+          className="flex-1 overflow-y-auto px-8 py-4 space-y-8 pb-12 scrollbar-hide"
         >
-          {/* 1. Amount Display + Voice Trigger */}
-          <div className="text-center space-y-4 relative">
+          {/* Amount Display */}
+          <div className="relative group bg-secondary/30 rounded-[2rem] p-8 text-center space-y-3 overflow-hidden border border-transparent focus-within:border-primary/20 transition-all">
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-foreground/20">
               Spending Amount
             </p>
 
-            <div className="flex flex-col items-center justify-center gap-2">
-              <div className="flex items-center gap-2">
-                <span className="text-xl font-black text-primary/40">Rp</span>
-                <div className="text-5xl font-black tracking-tighter text-foreground overflow-x-auto whitespace-nowrap scrollbar-hide py-2 max-w-[250px]">
-                  {expression || '0'}
-                </div>
+            <div className="flex items-center justify-center gap-3">
+              <span className="text-xl font-black text-primary/30 mt-1">
+                Rp
+              </span>
+              <div className="text-5xl font-black tracking-tighter text-foreground truncate max-w-full">
+                {expression || '0'}
               </div>
+            </div>
 
-              {/* Voice Button */}
-              <Button
+            {/* Voice Trigger Small */}
+            <div className="pt-4">
+              <button
                 type="button"
                 onClick={startListening}
-                disabled={isListening || isParsing}
-                className={`mt-2 rounded-full w-14 h-14 shadow-lg transition-all duration-500 flex items-center justify-center ${
-                  isListening
-                    ? 'bg-red-500 animate-pulse scale-110'
-                    : 'bg-primary hover:bg-primary/90'
-                }`}
-              >
-                {isListening ? (
-                  <div className="flex gap-1">
-                    <span className="w-1.5 h-4 bg-white rounded-full animate-bounce"></span>
-                    <span className="w-1.5 h-4 bg-white rounded-full animate-bounce [animation-delay:0.2s]"></span>
-                    <span className="w-1.5 h-4 bg-white rounded-full animate-bounce [animation-delay:0.4s]"></span>
-                  </div>
-                ) : (
-                  <HugeiconsIcon
-                    icon={Mic01Icon}
-                    size={24}
-                    fill="currentColor"
-                  />
+                className={cn(
+                  'inline-flex items-center gap-2 px-5 py-2.5 rounded-full transition-all duration-300 font-bold text-[11px] uppercase tracking-widest shadow-sm',
+                  isParsing
+                    ? 'bg-amber-100 text-amber-600'
+                    : 'bg-primary text-white shadow-primary/20 hover:scale-105 active:scale-95',
                 )}
-              </Button>
-              {isListening && (
-                <p className="text-[10px] font-bold text-red-500 animate-pulse uppercase tracking-widest mt-2">
-                  Mendengarkan...
-                </p>
-              )}
-              {isParsing && (
-                <p className="text-[10px] font-bold text-primary animate-pulse uppercase tracking-widest mt-2">
-                  Memproses data...
-                </p>
-              )}
+              >
+                {isParsing ? (
+                  <>
+                    <HugeiconsIcon
+                      icon={Loading03Icon}
+                      size={14}
+                      className="animate-spin"
+                    />
+                    Parsing...
+                  </>
+                ) : (
+                  <>
+                    <HugeiconsIcon icon={Mic01Icon} size={14} />
+                    Quick Voice
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Subtle Decoration */}
+            <div className="absolute -bottom-6 -right-6 opacity-[0.03] text-foreground pointer-events-none">
+              <HugeiconsIcon icon={Mic01Icon} size={120} />
             </div>
           </div>
 
-          {/* 2. Category & Date */}
+          {/* Form Grid */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label className="text-[9px] font-black uppercase tracking-[0.2em] text-foreground/40 ml-1">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-foreground/40 ml-1">
                 Category
               </Label>
-              <div className="relative group">
+              <div className="relative">
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full h-12 bg-secondary/10 border-none rounded-xl font-black text-[10px] uppercase tracking-widest px-4 appearance-none outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground"
+                  className="w-full h-12 bg-secondary/50 border-none rounded-2xl font-bold text-xs uppercase tracking-wider px-4 appearance-none outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground"
                 >
                   {categories.map((cat) => (
                     <option key={cat.id} value={cat.name}>
@@ -255,12 +301,12 @@ const TransactionForm: React.FC = () => {
                 <HugeiconsIcon
                   icon={ArrowDown01Icon}
                   size={14}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/30 pointer-events-none"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground/30 pointer-events-none"
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label className="text-[9px] font-black uppercase tracking-[0.2em] text-foreground/40 ml-1">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-foreground/40 ml-1">
                 Date
               </Label>
               <input
@@ -268,109 +314,98 @@ const TransactionForm: React.FC = () => {
                 required
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full h-12 bg-secondary/10 border-none rounded-xl font-black text-[10px] uppercase px-4 outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground"
+                className="w-full h-12 bg-secondary/50 border-none rounded-2xl font-bold text-xs px-4 outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground"
               />
             </div>
           </div>
 
-          {/* 3. Calculator Keypad */}
-          <div className="space-y-3 bg-secondary/5 p-4 rounded-xl border border-secondary/10">
-            <div className="grid grid-cols-4 gap-2">
-              {['7', '8', '9', '/'].map((k) => (
+          {/* Calculator Keypad - Compact */}
+          <div className="bg-secondary/20 p-2 rounded-[2rem] border border-border/50">
+            <div className="grid grid-cols-4 gap-1.5">
+              {[
+                '7',
+                '8',
+                '9',
+                '/',
+                '4',
+                '5',
+                '6',
+                '*',
+                '1',
+                '2',
+                '3',
+                '-',
+                'C',
+                '0',
+                '000',
+                '+',
+              ].map((k) => (
                 <Button
                   key={k}
                   type="button"
-                  variant="secondary"
+                  variant="ghost"
                   onClick={() => handleKeyClick(k)}
-                  className="h-11 font-bold text-base rounded-xl bg-card shadow-sm border border-secondary/5 hover:bg-secondary/10"
-                >
-                  {k}
-                </Button>
-              ))}
-              {['4', '5', '6', '*'].map((k) => (
-                <Button
-                  key={k}
-                  type="button"
-                  variant="secondary"
-                  onClick={() => handleKeyClick(k)}
-                  className="h-11 font-bold text-base rounded-xl bg-card shadow-sm border border-secondary/5 hover:bg-secondary/10"
-                >
-                  {k}
-                </Button>
-              ))}
-              {['1', '2', '3', '-'].map((k) => (
-                <Button
-                  key={k}
-                  type="button"
-                  variant="secondary"
-                  onClick={() => handleKeyClick(k)}
-                  className="h-11 font-bold text-base rounded-xl bg-card shadow-sm border border-secondary/5 hover:bg-secondary/10"
-                >
-                  {k}
-                </Button>
-              ))}
-              {['C', '0', '000', '+'].map((k) => (
-                <Button
-                  key={k}
-                  type="button"
-                  variant={k === 'C' ? 'destructive' : 'secondary'}
-                  onClick={() => handleKeyClick(k)}
-                  className={`h-11 font-bold text-base rounded-xl ${k !== 'C' ? 'bg-card shadow-sm border border-secondary/5 hover:bg-secondary/10' : ''}`}
+                  className={cn(
+                    'h-12 font-bold text-base rounded-xl transition-all active:bg-primary/10 active:text-primary',
+                    k === 'C'
+                      ? 'text-destructive hover:bg-destructive/5'
+                      : 'bg-card/40 hover:bg-card shadow-sm border border-border/5',
+                  )}
                 >
                   {k}
                 </Button>
               ))}
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 onClick={() => handleKeyClick('.')}
-                className="h-11 font-bold text-base rounded-xl col-span-1 bg-card border-secondary/10"
+                className="h-12 font-bold text-base rounded-xl bg-card/40 border border-border/5 shadow-sm"
               >
                 .
               </Button>
               <Button
                 type="button"
-                variant="outline"
                 onClick={() => handleKeyClick('=')}
-                className="h-11 font-bold text-base rounded-xl col-span-2 bg-card border-secondary/10"
+                className="h-12 font-bold text-base rounded-xl col-span-2 bg-primary text-white shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all"
               >
                 =
               </Button>
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 onClick={() => handleKeyClick('DEL')}
-                className="h-11 font-bold text-base rounded-xl col-span-1 bg-card border-secondary/10 flex items-center justify-center"
+                className="h-12 font-bold text-base rounded-xl bg-card/40 border border-border/5 shadow-sm flex items-center justify-center text-foreground/60"
               >
                 <HugeiconsIcon icon={Delete02Icon} size={18} />
               </Button>
             </div>
           </div>
 
-          {/* 4. Note & Save */}
+          {/* Note & CTA */}
           <div className="space-y-6">
             <div className="space-y-2">
-              <Label className="text-[9px] font-black uppercase tracking-[0.2em] text-foreground/40 ml-1">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-foreground/40 ml-1">
                 Note (Optional)
               </Label>
               <textarea
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="What was this for?"
-                className="w-full px-4 py-3 bg-secondary/5 border border-secondary/10 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none h-16 resize-none font-bold text-xs text-foreground placeholder:text-foreground/10"
+                className="w-full px-5 py-4 bg-secondary/30 border border-transparent rounded-2xl focus:border-primary/20 focus:bg-card outline-none h-20 resize-none font-medium text-xs text-foreground placeholder:text-foreground/20 transition-all shadow-inner"
               />
             </div>
 
             <Button
               type="submit"
               disabled={isListening || isParsing}
-              className="group w-full h-14 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-[0.3em] text-xs shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all active:scale-[0.97] flex items-center justify-center gap-3"
+              className="group w-full h-16 rounded-[1.5rem] bg-primary text-white font-black uppercase tracking-[0.3em] text-xs shadow-xl shadow-primary/30 hover:bg-primary/90 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-3"
             >
-              Save Transaction
+              Save Record
               <HugeiconsIcon
-                icon={ArrowRight01Icon}
+                icon={Tick01Icon}
                 size={18}
-                className="group-hover:translate-x-1 transition-transform"
+                strokeWidth={3}
+                className="group-hover:scale-110 transition-transform"
               />
             </Button>
           </div>
