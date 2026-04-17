@@ -1,59 +1,19 @@
-import { useLiveQuery } from 'dexie-react-hooks';
-import { HugeiconsIcon } from '@hugeicons/react';
+import PageHeader from '@/components/PageHeader';
+import { DEFAULT_ICON, ICON_MAP } from '@/constants/icons';
+import { cn } from '@/lib/utils';
 import {
   ArrowLeft01Icon,
   ArrowRight01Icon,
   Delete02Icon,
-  UserIcon,
-  Tag01Icon,
-  SpoonAndForkIcon,
-  Car01Icon,
-  ShoppingBag01Icon,
   Invoice01Icon,
-  Joystick01Icon,
-  FavouriteIcon,
-  Certificate01Icon,
-  PackageIcon,
-  Coffee01Icon,
-  Home01Icon,
-  FlashIcon,
-  Airplane01Icon,
-  GiftIcon,
-  Dumbbell01Icon,
-  Pizza01Icon,
-  Briefcase01Icon,
-  Camera01Icon,
-  MusicNote01Icon,
-  GlobeIcon,
+  UserIcon,
 } from '@hugeicons/core-free-icons';
-import React, { useState } from 'react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { useLiveQuery } from 'dexie-react-hooks';
+import React, { useMemo, useState } from 'react';
 import { db } from '../db/database';
-import PageHeader from '@/components/PageHeader';
-import { cn } from '@/lib/utils';
 
 // --- Constants & Utilities ---
-const ICON_MAP: Record<string, any> = {
-  Utensils: SpoonAndForkIcon,
-  Car: Car01Icon,
-  ShoppingBag: ShoppingBag01Icon,
-  Receipt: Invoice01Icon,
-  Gamepad2: Joystick01Icon,
-  HeartPulse: FavouriteIcon,
-  GraduationCap: Certificate01Icon,
-  Heart: FavouriteIcon,
-  Box: PackageIcon,
-  Coffee: Coffee01Icon,
-  Home: Home01Icon,
-  Zap: FlashIcon,
-  Plane: Airplane01Icon,
-  Gift: GiftIcon,
-  Dumbbell: Dumbbell01Icon,
-  Pizza: Pizza01Icon,
-  Briefcase: Briefcase01Icon,
-  Camera: Camera01Icon,
-  Music: MusicNote01Icon,
-  Globe: GlobeIcon,
-};
 
 const formatCurrency = (val: number) => {
   return new Intl.NumberFormat('id-ID', {
@@ -73,20 +33,24 @@ const Dashboard: React.FC = () => {
     year: 'numeric',
   });
 
-  const transactions =
-    useLiveQuery(
-      () =>
-        db.transactions
-          .filter((t) => {
-            const tDate = new Date(t.date);
-            return (
-              tDate.getMonth() === currentDate.getMonth() &&
-              tDate.getFullYear() === currentDate.getFullYear()
-            );
-          })
-          .toArray(),
-      [currentDate],
-    ) || [];
+  const liveTransactions = useLiveQuery(
+    () =>
+      db.transactions
+        .filter((t) => {
+          const tDate = new Date(t.date);
+          return (
+            tDate.getMonth() === currentDate.getMonth() &&
+            tDate.getFullYear() === currentDate.getFullYear()
+          );
+        })
+        .toArray(),
+    [currentDate],
+  );
+
+  const transactions = useMemo(
+    () => liveTransactions || [],
+    [liveTransactions],
+  );
 
   const totalExpense = transactions
     .filter((t) => t.type === 'expense')
@@ -105,7 +69,7 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen animate-in fade-in duration-700 bg-background transition-colors duration-300">
+    <div className="flex flex-col min-h-screen animate-in fade-in  bg-background transition-colors duration-300">
       <PageHeader
         title="Factuang"
         subtitle="Financial Overview"
@@ -118,15 +82,19 @@ const Dashboard: React.FC = () => {
 
       <main className="flex-1">
         {/* Summary Section */}
-        <section className="px-8 pt-8 pb-10 space-y-10">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold tracking-tight capitalize text-foreground italic">
+        <section className="relative px-8 pt-8 pb-12 space-y-10 bg-linear-to-br from-primary via-blue-600 to-indigo-600 dark:from-primary dark:via-blue-800 dark:to-indigo-950 rounded-b-[2.5rem] shadow-xl shadow-primary/20 overflow-hidden">
+          {/* Subtle Background Glow Elements */}
+          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-white/20 blur-[80px] rounded-full pointer-events-none" />
+          <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-48 h-48 bg-black/10 blur-[60px] rounded-full pointer-events-none" />
+
+          <div className="relative flex items-center justify-between">
+            <h2 className="text-2xl font-bold tracking-tight capitalize text-white italic drop-shadow-sm">
               {monthYear}
             </h2>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => changeMonth(-1)}
-                className="p-2 hover:bg-secondary rounded-full transition-colors flex items-center justify-center text-foreground/60 active:scale-90"
+                className="p-2 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full transition-all flex items-center justify-center text-white active:scale-90 border border-white/10 shadow-inner"
               >
                 <HugeiconsIcon
                   icon={ArrowLeft01Icon}
@@ -136,7 +104,7 @@ const Dashboard: React.FC = () => {
               </button>
               <button
                 onClick={() => changeMonth(1)}
-                className="p-2 hover:bg-secondary rounded-full transition-colors flex items-center justify-center text-foreground/60 active:scale-90"
+                className="p-2 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full transition-all flex items-center justify-center text-white active:scale-90 border border-white/10 shadow-inner"
               >
                 <HugeiconsIcon
                   icon={ArrowRight01Icon}
@@ -147,11 +115,11 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="space-y-1">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/40">
+          <div className="relative space-y-1">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60">
               Total Pengeluaran
             </p>
-            <p className="text-4xl font-black tracking-tighter text-primary">
+            <p className="text-5xl font-black tracking-tighter text-white drop-shadow-lg">
               {formatCurrency(totalExpense)}
             </p>
           </div>
@@ -169,13 +137,13 @@ const Dashboard: React.FC = () => {
               </span>
             </div>
 
-            <div className="bg-card/40 rounded-[1.5rem] border border-border/10 overflow-hidden shadow-sm shadow-black/[0.02]">
+            <div className="bg-card/40 rounded-[1.5rem] border border-border/10 overflow-hidden shadow-sm shadow-black/2">
               <div className="divide-y divide-border/10">
                 {transactions.length > 0 ? (
                   [...transactions].reverse().map((t) => {
                     const icon = t.categoryIcon
-                      ? ICON_MAP[t.categoryIcon] || Tag01Icon
-                      : Tag01Icon;
+                      ? ICON_MAP[t.categoryIcon] || DEFAULT_ICON
+                      : DEFAULT_ICON;
                     const colorClass = t.categoryColor || 'bg-slate-500';
 
                     return (

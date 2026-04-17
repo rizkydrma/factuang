@@ -2,57 +2,13 @@ import React, { useMemo, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Transaction } from '../db/database';
 import { HugeiconsIcon } from '@hugeicons/react';
-import {
-  Delete02Icon,
-  Invoice01Icon,
-  Tag01Icon,
-  SpoonAndForkIcon,
-  Car01Icon,
-  ShoppingBag01Icon,
-  FavouriteIcon,
-  PackageIcon,
-  Coffee01Icon,
-  Home01Icon,
-  FlashIcon,
-  Airplane01Icon,
-  GiftIcon,
-  Dumbbell01Icon,
-  Pizza01Icon,
-  Briefcase01Icon,
-  Camera01Icon,
-  MusicNote01Icon,
-  GlobeIcon,
-  Joystick01Icon,
-  Certificate01Icon,
-  Search01Icon,
-} from '@hugeicons/core-free-icons';
+import { Delete02Icon, Search01Icon } from '@hugeicons/core-free-icons';
 import SearchBar from '@/components/SearchBar';
 import PageHeader from '@/components/PageHeader';
 import { cn } from '@/lib/utils';
+import { ICON_MAP, DEFAULT_ICON } from '@/constants/icons';
 
 // --- Constants & Utilities ---
-const ICON_MAP: Record<string, any> = {
-  Utensils: SpoonAndForkIcon,
-  Car: Car01Icon,
-  ShoppingBag: ShoppingBag01Icon,
-  Receipt: Invoice01Icon,
-  Gamepad2: Joystick01Icon,
-  HeartPulse: FavouriteIcon,
-  GraduationCap: Certificate01Icon,
-  Heart: FavouriteIcon,
-  Box: PackageIcon,
-  Coffee: Coffee01Icon,
-  Home: Home01Icon,
-  Zap: FlashIcon,
-  Plane: Airplane01Icon,
-  Gift: GiftIcon,
-  Dumbbell: Dumbbell01Icon,
-  Pizza: Pizza01Icon,
-  Briefcase: Briefcase01Icon,
-  Camera: Camera01Icon,
-  Music: MusicNote01Icon,
-  Globe: GlobeIcon,
-};
 
 const formatCurrency = (val: number) => {
   return new Intl.NumberFormat('id-ID', {
@@ -87,8 +43,8 @@ const TransactionRow: React.FC<{
   onDelete: (id: number) => void;
 }> = ({ transaction: t, onDelete }) => {
   const icon = t.categoryIcon
-    ? ICON_MAP[t.categoryIcon] || Tag01Icon
-    : Tag01Icon;
+    ? ICON_MAP[t.categoryIcon] || DEFAULT_ICON
+    : DEFAULT_ICON;
   const colorClass = t.categoryColor || 'bg-slate-500';
 
   return (
@@ -135,19 +91,23 @@ const TransactionRow: React.FC<{
 const Transactions: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
-  const transactions =
-    useLiveQuery(
-      () =>
-        db.transactions
-          .reverse()
-          .filter(
-            (t) =>
-              t.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              (t.note || '').toLowerCase().includes(searchTerm.toLowerCase()),
-          )
-          .toArray(),
-      [searchTerm],
-    ) || [];
+  const liveTransactions = useLiveQuery(
+    () =>
+      db.transactions
+        .reverse()
+        .filter(
+          (t) =>
+            t.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (t.note || '').toLowerCase().includes(searchTerm.toLowerCase()),
+        )
+        .toArray(),
+    [searchTerm],
+  );
+
+  const transactions = useMemo(
+    () => liveTransactions || [],
+    [liveTransactions],
+  );
 
   const groupedTransactions = useMemo(() => {
     return transactions.reduce(
@@ -191,7 +151,7 @@ const Transactions: React.FC = () => {
                   <div className="h-px bg-border/40 w-full" />
                 </div>
 
-                <div className="bg-card/40 rounded-[1.5rem] border border-border/10 overflow-hidden shadow-sm shadow-black/[0.02]">
+                <div className="bg-card/40 rounded-[1.5rem] border border-border/10 overflow-hidden shadow-sm shadow-black/2">
                   <div className="divide-y divide-border/10">
                     {items.map((t) => (
                       <TransactionRow

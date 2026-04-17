@@ -17,75 +17,21 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { AnimatePresence, motion } from 'framer-motion';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
-  PackageIcon,
-  Briefcase01Icon,
-  Camera01Icon,
-  Car01Icon,
-  Coffee01Icon,
-  Dumbbell01Icon,
-  Joystick01Icon,
-  GiftIcon,
-  GlobeIcon,
-  Certificate01Icon,
-  FavouriteIcon,
-  Home01Icon,
-  MusicNote01Icon,
-  Pizza01Icon,
-  Airplane01Icon,
-  Add01Icon,
-  Invoice01Icon,
-  ShoppingBag01Icon,
-  SparklesIcon,
-  Tag01Icon,
   Delete02Icon,
-  SpoonAndForkIcon,
-  FlashIcon,
+  Add01Icon,
+  SparklesIcon,
 } from '@hugeicons/core-free-icons';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { db, type Category } from '../db/database';
 import PageHeader from '@/components/PageHeader';
 import SearchBar from '@/components/SearchBar';
-
-const AVAILABLE_ICONS = [
-  { name: 'Utensils', icon: SpoonAndForkIcon },
-  { name: 'Car', icon: Car01Icon },
-  { name: 'ShoppingBag', icon: ShoppingBag01Icon },
-  { name: 'Receipt', icon: Invoice01Icon },
-  { name: 'Gamepad2', icon: Joystick01Icon },
-  { name: 'HeartPulse', icon: FavouriteIcon },
-  { name: 'GraduationCap', icon: Certificate01Icon },
-  { name: 'Heart', icon: FavouriteIcon },
-  { name: 'Box', icon: PackageIcon },
-  { name: 'Coffee', icon: Coffee01Icon },
-  { name: 'Home', icon: Home01Icon },
-  { name: 'Zap', icon: FlashIcon },
-  { name: 'Plane', icon: Airplane01Icon },
-  { name: 'Gift', icon: GiftIcon },
-  { name: 'Dumbbell', icon: Dumbbell01Icon },
-  { name: 'Pizza', icon: Pizza01Icon },
-  { name: 'Briefcase', icon: Briefcase01Icon },
-  { name: 'Camera', icon: Camera01Icon },
-  { name: 'Music', icon: MusicNote01Icon },
-  { name: 'Globe', icon: GlobeIcon },
-];
-
-const AVAILABLE_COLORS = [
-  'bg-rose-500',
-  'bg-indigo-500',
-  'bg-emerald-500',
-  'bg-amber-500',
-  'bg-purple-500',
-  'bg-cyan-500',
-  'bg-pink-500',
-  'bg-slate-500',
-  'bg-orange-500',
-  'bg-lime-500',
-];
+import { ICON_MAP, DEFAULT_ICON, AVAILABLE_ICONS } from '@/constants/icons';
+import { AVAILABLE_COLORS, DEFAULT_CATEGORY_COLOR } from '@/constants/colors';
 
 const Categories: React.FC = () => {
   const [newCategory, setNewCategory] = useState('');
   const [selectedIcon, setSelectedIcon] = useState('Tag');
-  const [selectedColor, setSelectedColor] = useState('bg-indigo-500');
+  const [selectedColor, setSelectedColor] = useState(DEFAULT_CATEGORY_COLOR);
   const [searchTerm, setSearchTerm] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<{
@@ -93,10 +39,15 @@ const Categories: React.FC = () => {
     name: string;
   } | null>(null);
 
-  const categories = useLiveQuery(() => db.categories.toArray()) || [];
+  const liveCategories = useLiveQuery(() => db.categories.toArray());
+  const categories = useMemo(() => liveCategories || [], [liveCategories]);
 
-  const filteredCategories = categories.filter((cat) =>
-    cat.name.toLowerCase().includes(searchTerm.toLowerCase()),
+  const filteredCategories = useMemo(
+    () =>
+      categories.filter((cat) =>
+        cat.name.toLowerCase().includes(searchTerm.toLowerCase()),
+      ),
+    [categories, searchTerm],
   );
 
   const handleAddCategory = async (e: React.FormEvent) => {
@@ -111,16 +62,15 @@ const Categories: React.FC = () => {
       });
       setNewCategory('');
       setSelectedIcon('Tag');
-      setSelectedColor('bg-indigo-500');
+      setSelectedColor(DEFAULT_CATEGORY_COLOR);
       setIsAdding(false);
-    } catch (error) {
+    } catch {
       alert('Kategori sudah ada atau terjadi kesalahan.');
     }
   };
 
   const getIconComponent = (name: string) => {
-    const found = AVAILABLE_ICONS.find((i) => i.name === name);
-    return found ? found.icon : Tag01Icon;
+    return ICON_MAP[name] || DEFAULT_ICON;
   };
 
   const handleDeleteCategory = async () => {
@@ -142,14 +92,9 @@ const Categories: React.FC = () => {
   const getCategoryColor = (cat: Category) => {
     if (cat.color) return `${cat.color}/10 text-${cat.color.split('-')[1]}-500`;
 
-    const colors = [
-      'bg-indigo-500/10 text-indigo-500',
-      'bg-emerald-500/10 text-emerald-500',
-      'bg-rose-500/10 text-rose-500',
-      'bg-amber-500/10 text-amber-500',
-      'bg-cyan-500/10 text-cyan-500',
-      'bg-fuchsia-500/10 text-fuchsia-500',
-    ];
+    const colors = AVAILABLE_COLORS.map(
+      (c) => `${c}/10 text-${c.split('-')[1]}-500`,
+    );
     let hash = 0;
     const name = cat.name || '';
     for (let i = 0; i < name.length; i++) {
@@ -205,7 +150,7 @@ const Categories: React.FC = () => {
                         <p className="font-bold text-sm uppercase tracking-tight">
                           {cat.name}
                         </p>
-                        <p className="text-[10px] font-medium opacity-30 uppercase tracking-[0.1em]">
+                        <p className="text-[10px] font-medium opacity-30 uppercase tracking-widest">
                           Ref #{cat.id}
                         </p>
                       </div>
@@ -312,7 +257,7 @@ const Categories: React.FC = () => {
                   Select Icon
                 </label>
                 <div className="grid grid-cols-5 gap-2 max-h-40 overflow-y-auto p-1 scrollbar-hide">
-                  {AVAILABLE_ICONS.map(({ name, icon: icon }) => (
+                  {AVAILABLE_ICONS.map(({ name, icon: iconComp }) => (
                     <button
                       key={name}
                       type="button"
@@ -324,7 +269,7 @@ const Categories: React.FC = () => {
                           : 'bg-secondary text-foreground/40 hover:bg-secondary/80',
                       )}
                     >
-                      <HugeiconsIcon icon={icon} size={20} />
+                      <HugeiconsIcon icon={iconComp} size={20} />
                     </button>
                   ))}
                 </div>
@@ -370,7 +315,7 @@ const Categories: React.FC = () => {
         </DrawerContent>
       </Drawer>
 
-      <div className="fixed bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+      <div className="fixed bottom-0 left-0 right-0 h-32 bg-linear-to-t from-background to-transparent pointer-events-none" />
     </div>
   );
 };

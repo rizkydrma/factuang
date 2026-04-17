@@ -1,5 +1,5 @@
 import React from 'react';
-import { db } from '../db/database';
+import { db, type Transaction } from '../db/database';
 import { Card } from '@/components/ui/card';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
@@ -64,7 +64,7 @@ const Settings: React.FC = () => {
       const content = e.target?.result as string;
       const lines = content.split('\n');
 
-      const newTransactions: any[] = [];
+      const newTransactions: Transaction[] = [];
       for (let i = 1; i < lines.length; i++) {
         if (!lines[i].trim()) continue;
 
@@ -116,7 +116,7 @@ const Settings: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen animate-in fade-in duration-700 pb-20 bg-background text-foreground transition-colors duration-300">
+    <div className="flex flex-col min-h-screen animate-in fade-in duration-300 pb-20 bg-background text-foreground transition-colors">
       <PageHeader title="Settings" subtitle="Preferences & Data" showBack />
 
       <div className="flex-1 p-6 space-y-8">
@@ -170,7 +170,7 @@ const Settings: React.FC = () => {
 
               <button
                 onClick={resetAllData}
-                className="w-full px-6 py-5 flex items-center justify-center bg-destructive/5 hover:bg-destructive text-destructive hover:text-white transition-all py-4 font-black uppercase tracking-widest text-[10px]"
+                className="w-full px-6 py-5 flex items-center justify-center bg-destructive/5 hover:bg-destructive text-destructive hover:text-white transition-all font-black uppercase tracking-widest text-[10px]"
               >
                 <HugeiconsIcon icon={Delete02Icon} size={16} className="mr-2" />
                 Reset & Delete All Data

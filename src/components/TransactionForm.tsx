@@ -1,18 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { HugeiconsIcon } from '@hugeicons/react';
-import {
-  Cancel01Icon,
-  Delete02Icon,
-  ArrowDown01Icon,
-  Mic01Icon,
-  Loading03Icon,
-  Tick01Icon,
-} from '@hugeicons/core-free-icons';
-import { motion, AnimatePresence } from 'framer-motion';
-import { db } from '../db/database';
-import { useUIStore } from '../store/uiStore';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import {
   Drawer,
   DrawerClose,
@@ -20,8 +6,56 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import {
+  ArrowDown01Icon,
+  Cancel01Icon,
+  Delete02Icon,
+  Loading03Icon,
+  Mic01Icon,
+  Tick01Icon,
+} from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { AnimatePresence, motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { db } from '../db/database';
+import { useUIStore } from '../store/uiStore';
+
+// --- Types for Speech Recognition ---
+interface SpeechRecognitionEvent extends Event {
+  results: {
+    [index: number]: {
+      [index: number]: {
+        transcript: string;
+      };
+    };
+  };
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: (event: SpeechRecognitionEvent) => void;
+  onstart: () => void;
+  onend: () => void;
+  onerror: (event: Event) => void;
+  start: () => void;
+  stop: () => void;
+}
+
+interface SpeechRecognitionConstructor {
+  new (): SpeechRecognition;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition?: SpeechRecognitionConstructor;
+    webkitSpeechRecognition?: SpeechRecognitionConstructor;
+  }
+}
 
 // --- Sub-components ---
 
@@ -57,19 +91,46 @@ const TransactionForm: React.FC = () => {
   const [isParsing, setIsParsing] = useState(false);
 
   const categories = useLiveQuery(() => db.categories.toArray()) || [];
-
-  useEffect(() => {
-    if (categories.length > 0 && !category) {
-      setCategory(categories[0].name);
-    }
-  }, [categories, category]);
+  const effectiveCategory =
+    category || (categories.length > 0 ? categories[0].name : '');
 
   const calculateResult = (expr: string): string => {
     try {
       const cleanExpr = expr.replace(/[^-+*/.0-9]/g, '');
       if (!cleanExpr) return '0';
-      // eslint-disable-next-line no-eval
-      const result = eval(cleanExpr);
+
+      // Safe evaluation of basic arithmetic
+      const safeEval = (str: string): number => {
+        const parts = str.split(/(\+|-)/).filter((p) => p.trim() !== '');
+        let total = 0;
+        let currentOp = '+';
+
+        for (const part of parts) {
+          if (part === '+' || part === '-') {
+            currentOp = part;
+          } else {
+            const subParts = part
+              .split(/(\*|\/)/)
+              .filter((p) => p.trim() !== '');
+            let subTotal = parseFloat(subParts[0]);
+            if (isNaN(subTotal)) subTotal = 0;
+
+            for (let i = 1; i < subParts.length; i += 2) {
+              const op = subParts[i];
+              const val = parseFloat(subParts[i + 1]);
+              if (isNaN(val)) continue;
+              if (op === '*') subTotal *= val;
+              if (op === '/') subTotal = val !== 0 ? subTotal / val : 0;
+            }
+
+            if (currentOp === '+') total += subTotal;
+            else total -= subTotal;
+          }
+        }
+        return total;
+      };
+
+      const result = safeEval(cleanExpr);
       return String(Math.max(0, Math.floor(result)));
     } catch {
       return '0';
@@ -103,8 +164,7 @@ const TransactionForm: React.FC = () => {
   // --- Voice Logic ---
   const startListening = () => {
     const SpeechRecognition =
-      (window as any).SpeechRecognition ||
-      (window as any).webkitSpeechRecognition;
+      window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       alert('Browser Anda tidak mendukung Speech Recognition.');
       return;
@@ -118,7 +178,7 @@ const TransactionForm: React.FC = () => {
     recognition.onend = () => setIsListening(false);
     recognition.onerror = () => setIsListening(false);
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
       const transcript = event.results[0][0].transcript;
       processVoiceTranscript(transcript);
     };
@@ -144,12 +204,12 @@ const TransactionForm: React.FC = () => {
     const finalAmount = calculateResult(expression);
     if (!finalAmount || finalAmount === '0') return;
 
-    const selectedCat = categories.find((c) => c.name === category);
+    const selectedCat = categories.find((c) => c.name === effectiveCategory);
 
     await db.transactions.add({
       type: 'expense',
       amount: Number(finalAmount),
-      category: category || 'Other',
+      category: effectiveCategory || 'Other',
       categoryIcon: selectedCat?.icon,
       categoryColor: selectedCat?.color,
       date,
@@ -174,7 +234,7 @@ const TransactionForm: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 z-[60] bg-primary flex flex-col items-center justify-center text-white p-8 space-y-8"
+              className="absolute inset-0 z-60 bg-primary flex flex-col items-center justify-center text-white p-8 space-y-8"
             >
               <div className="space-y-2 text-center">
                 <h2 className="text-2xl font-black uppercase tracking-tighter italic">
@@ -288,7 +348,7 @@ const TransactionForm: React.FC = () => {
               </Label>
               <div className="relative">
                 <select
-                  value={category}
+                  value={effectiveCategory}
                   onChange={(e) => setCategory(e.target.value)}
                   className="w-full h-12 bg-secondary/50 border-none rounded-2xl font-bold text-xs uppercase tracking-wider px-4 appearance-none outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground"
                 >
