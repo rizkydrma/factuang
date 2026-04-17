@@ -20,7 +20,6 @@ const Dashboard: React.FC = () => {
     year: 'numeric',
   });
 
-  // Filter transactions by the current month and year
   const transactions =
     useLiveQuery(
       () =>
@@ -61,60 +60,63 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen animate-in fade-in duration-700 bg-background">
+    <div className="flex flex-col min-h-screen animate-in fade-in duration-700 bg-background transition-colors duration-300">
       {/* Hero Header Section */}
-      <section className="bg-background border-b border-border px-8 pt-8 pb-16 space-y-12 transition-colors duration-300">
-        <header className="flex items-center justify-between text-foreground">
+      <section className="px-8 pt-10 pb-12 space-y-12">
+        <header className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <HugeiconsIcon
-              icon={Activity01Icon}
-              size={28}
-              strokeWidth={3}
-              className="text-primary"
-            />
+            <div className="p-2.5 rounded-2xl bg-primary/10 text-primary">
+              <HugeiconsIcon icon={Activity01Icon} size={24} strokeWidth={3} />
+            </div>
             <div className="flex items-baseline gap-1.5">
-              <h1 className="text-xl font-black tracking-tighter uppercase">
+              <h1 className="text-xl font-black tracking-tighter uppercase text-foreground">
                 Factuang
               </h1>
-              <span className="text-[10px] font-bold opacity-30">0.0.1</span>
+              <span className="text-[10px] font-bold text-foreground/20">
+                0.0.1
+              </span>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <HugeiconsIcon
-              icon={Search01Icon}
-              size={24}
-              className="opacity-50"
-            />
-            <HugeiconsIcon
-              icon={Settings01Icon}
-              size={24}
-              className="opacity-50"
-            />
+          <div className="flex items-center gap-3">
+            <button className="p-2 hover:bg-secondary rounded-xl transition-colors">
+              <HugeiconsIcon
+                icon={Search01Icon}
+                size={22}
+                className="text-foreground/40"
+              />
+            </button>
+            <button className="p-2 hover:bg-secondary rounded-xl transition-colors">
+              <HugeiconsIcon
+                icon={Settings01Icon}
+                size={22}
+                className="text-foreground/40"
+              />
+            </button>
           </div>
         </header>
 
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold tracking-tight capitalize">
+          <h2 className="text-2xl font-bold tracking-tight capitalize text-foreground">
             {monthYear}
           </h2>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => changeMonth(-1)}
-              className="p-1 hover:bg-secondary rounded-full transition-colors flex items-center justify-center"
+              className="p-2 hover:bg-secondary rounded-full transition-colors flex items-center justify-center text-foreground/60"
             >
               <HugeiconsIcon
                 icon={ArrowLeft01Icon}
-                size={24}
+                size={20}
                 strokeWidth={2.5}
               />
             </button>
             <button
               onClick={() => changeMonth(1)}
-              className="p-1 hover:bg-secondary rounded-full transition-colors flex items-center justify-center"
+              className="p-2 hover:bg-secondary rounded-full transition-colors flex items-center justify-center text-foreground/60"
             >
               <HugeiconsIcon
                 icon={ArrowRight01Icon}
-                size={24}
+                size={20}
                 strokeWidth={2.5}
               />
             </button>
@@ -122,36 +124,36 @@ const Dashboard: React.FC = () => {
         </div>
 
         <div className="space-y-1">
-          <p className="text-sm font-medium opacity-50 tracking-wide">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/40">
             Total pengeluaran
           </p>
-          <p className="text-3xl font-black tracking-tighter text-primary">
+          <p className="text-4xl font-black tracking-tighter text-primary">
             {formatCurrency(totalExpense).replace(',00', '')}
           </p>
         </div>
       </section>
 
       {/* Content Section Area */}
-      <div className="flex-1 bg-background px-6 pt-10 pb-8 space-y-10 transition-colors duration-300">
+      <div className="flex-1 px-6 space-y-10">
         {/* Monthly Transaction List */}
-        <section className="space-y-6 pt-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-foreground/40">
+        <section className="space-y-6">
+          <div className="flex items-center justify-between px-2">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-foreground/30">
               Daftar Transaksi
             </h3>
-            <span className="text-[10px] font-bold text-primary bg-secondary/20 px-2 py-0.5 rounded-full">
+            <span className="text-[9px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full uppercase tracking-widest">
               {transactions.length} Item
             </span>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {transactions.length > 0 ? (
               [...transactions].reverse().map((t) => (
                 <div
                   key={t.id}
-                  className="group relative bg-card border border-secondary/30 p-4 rounded-2xl flex items-center justify-between shadow-sm shadow-secondary/5"
+                  className="group relative bg-card border border-border/50 p-4 rounded-3xl flex items-center justify-between shadow-sm hover:shadow-md hover:border-primary/20 transition-all duration-300"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 rounded-xl bg-secondary/20 text-primary">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 rounded-2xl bg-secondary text-primary">
                       <HugeiconsIcon
                         icon={Invoice01Icon}
                         size={18}
@@ -159,30 +161,35 @@ const Dashboard: React.FC = () => {
                       />
                     </div>
                     <div className="space-y-0.5">
-                      <p className="text-xs font-black uppercase tracking-tight text-foreground">
+                      <p className="text-sm font-bold uppercase tracking-tight text-foreground">
                         {t.category}
                       </p>
-                      <p className="text-[9px] text-foreground/40 font-black uppercase tracking-widest">
-                        {new Date(t.date).toLocaleDateString('id-ID', {
-                          day: 'numeric',
-                          month: 'short',
-                        })}
-                      </p>
-                      {t.note && (
-                        <p className="text-[9px] text-foreground/60 italic font-medium truncate max-w-[120px]">
-                          {t.note}
+                      <div className="flex items-center gap-2">
+                        <p className="text-[9px] text-foreground/40 font-bold uppercase tracking-widest">
+                          {new Date(t.date).toLocaleDateString('id-ID', {
+                            day: 'numeric',
+                            month: 'short',
+                          })}
                         </p>
-                      )}
+                        {t.note && (
+                          <span className="w-1 h-1 bg-border rounded-full" />
+                        )}
+                        {t.note && (
+                          <p className="text-[9px] text-foreground/50 italic font-medium truncate max-w-[100px]">
+                            {t.note}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
 
                   <div className="flex flex-col items-end gap-1.5">
-                    <p className="text-xs font-black tracking-tighter text-foreground">
+                    <p className="text-sm font-black tracking-tight text-foreground">
                       {formatCurrency(t.amount).replace(',00', '')}
                     </p>
                     <button
                       onClick={() => t.id && handleDelete(t.id)}
-                      className="p-1 text-foreground/10 hover:text-destructive transition-all flex items-center justify-center"
+                      className="p-1 text-foreground/5 hover:text-destructive transition-all flex items-center justify-center"
                     >
                       <HugeiconsIcon icon={Delete02Icon} size={14} />
                     </button>
@@ -190,8 +197,11 @@ const Dashboard: React.FC = () => {
                 </div>
               ))
             ) : (
-              <div className="py-10 text-center border-2 border-dashed border-secondary rounded-3xl">
-                <p className="text-xs font-black uppercase tracking-widest text-foreground/20">
+              <div className="py-16 text-center border-2 border-dashed border-border/50 rounded-[40px] flex flex-col items-center justify-center gap-3">
+                <div className="p-4 rounded-full bg-secondary/50 text-foreground/10">
+                  <HugeiconsIcon icon={Invoice01Icon} size={32} />
+                </div>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/20">
                   Belum ada transaksi
                 </p>
               </div>

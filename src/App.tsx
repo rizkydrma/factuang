@@ -6,8 +6,11 @@ import Transactions from './pages/Transactions';
 import Categories from './pages/Categories';
 import Settings from './pages/Settings';
 import TransactionForm from './components/TransactionForm';
+import { useTheme } from './hooks/useTheme';
 
 const App: React.FC = () => {
+  useTheme(); // Initialize theme sync
+
   return (
     <BrowserRouter>
       <Routes>

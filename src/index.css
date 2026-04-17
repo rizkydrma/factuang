@@ -9,57 +9,81 @@
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #020617;
+  /* Background yang sedikit keabu-abuan/biru dingin (Slate 50) */
+  --background: #f8fafc;
+  /* Teks utama (Slate 900) */
+  --foreground: #0f172a;
+
+  /* Kartu berwarna putih murni untuk memberikan kontras elevation */
   --card: #ffffff;
-  --card-foreground: #020617;
+  --card-foreground: #0f172a;
+
   --popover: #ffffff;
-  --popover-foreground: #020617;
-  --primary: #19a7ce;
+  --popover-foreground: #0f172a;
+
+  /* Accent Blue yang lebih tenang */
+  --primary: #0ea5e9;
   --primary-foreground: #ffffff;
+
+  /* Elemen sekunder (Slate 100) */
   --secondary: #f1f5f9;
-  --secondary-foreground: #0f172a;
+  --secondary-foreground: #1e293b;
+
   --muted: #f1f5f9;
   --muted-foreground: #64748b;
+
   --accent: #f1f5f9;
   --accent-foreground: #0f172a;
+
   --destructive: #ef4444;
+
+  /* Border halus (Slate 200) */
   --border: #e2e8f0;
-  --input: #e2e8f0;
-  --ring: #19a7ce;
-  --radius: 1rem;
+  --input: #f1f5f9;
+  --ring: #0ea5e9;
+  --radius: 1.25rem;
 }
 
 .dark {
+  /* Latar belakang sangat gelap tapi tidak hitam pekat (Slate 950) */
   --background: #020617;
+  /* Teks putih yang sedikit diredam (Slate 50) */
   --foreground: #f8fafc;
+
+  /* Kartu di atas background (Slate 900) */
   --card: #0f172a;
   --card-foreground: #f8fafc;
-  --popover: #020617;
+
+  --popover: #0f172a;
   --popover-foreground: #f8fafc;
-  --primary: #19a7ce;
-  --primary-foreground: #ffffff;
+
+  --primary: #38bdf8;
+  --primary-foreground: #020617;
+
   --secondary: #1e293b;
   --secondary-foreground: #f8fafc;
+
   --muted: #1e293b;
   --muted-foreground: #94a3b8;
+
   --accent: #1e293b;
   --accent-foreground: #f8fafc;
+
   --destructive: #ef4444;
+
+  /* Border gelap yang tegas (Slate 800) */
   --border: #1e293b;
   --input: #1e293b;
-  --ring: #19a7ce;
+  --ring: #38bdf8;
 }
 
-/* Hide scrollbar for Chrome, Safari and Opera */
+/* Hide scrollbar */
 *::-webkit-scrollbar {
   display: none;
 }
-
-/* Hide scrollbar for IE, Edge and Firefox */
 * {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 body {
@@ -69,8 +93,8 @@ body {
   background-color: var(--background);
   color: var(--foreground);
   transition:
-    background-color 0.3s ease,
-    color 0.3s ease;
+    background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 input[type='number']::-webkit-inner-spin-button,

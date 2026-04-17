@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { db } from '../db/database';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -14,25 +14,11 @@ import {
 } from '@hugeicons/core-free-icons';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useTheme } from '@/hooks/useTheme';
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
-  const [theme, setTheme] = useState<'light' | 'dark'>(
-    (localStorage.getItem('theme') as 'light' | 'dark') || 'light',
-  );
-
-  useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    localStorage.setItem('theme', theme);
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
-  };
+  const { theme, toggleTheme } = useTheme();
 
   const exportToCSV = async () => {
     const transactions = await db.transactions.toArray();
@@ -133,20 +119,20 @@ const Settings: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen animate-in fade-in duration-700 pb-20 bg-background text-foreground">
+    <div className="flex flex-col min-h-screen animate-in fade-in duration-700 pb-20 bg-background text-foreground transition-colors duration-300">
       {/* Page Header */}
-      <header className="px-8 pt-8 pb-6 flex items-center justify-between bg-background border-b border-secondary/20">
+      <header className="px-8 pt-10 pb-6 flex items-center justify-between border-b border-border bg-background">
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate('/')}
-            className="rounded-full hover:bg-secondary/20"
+            className="rounded-full hover:bg-secondary"
           >
             <HugeiconsIcon icon={ArrowLeft01Icon} size={24} strokeWidth={2.5} />
           </Button>
           <div className="space-y-0.5">
-            <h2 className="text-xl font-black uppercase tracking-tighter text-foreground">
+            <h2 className="text-xl font-black uppercase tracking-tighter">
               Settings
             </h2>
             <p className="text-[10px] text-primary font-black uppercase tracking-[0.2em]">
@@ -156,17 +142,17 @@ const Settings: React.FC = () => {
         </div>
       </header>
 
-      <div className="flex-1 p-6 space-y-6">
+      <div className="flex-1 p-6 space-y-8">
         {/* Data Section */}
         <section className="space-y-4">
-          <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-foreground/40 ml-1">
+          <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-foreground/30 ml-1">
             Data Management
           </h3>
-          <Card className="bg-card border-secondary/30 rounded-3xl overflow-hidden shadow-sm">
-            <div className="divide-y divide-secondary/10">
+          <Card className="bg-card border-border rounded-[32px] overflow-hidden shadow-sm">
+            <div className="divide-y divide-border/50">
               <button
                 onClick={exportToCSV}
-                className="w-full px-6 py-5 flex items-center justify-between hover:bg-secondary/5 transition-colors text-left"
+                className="w-full px-6 py-5 flex items-center justify-between hover:bg-secondary transition-colors text-left"
               >
                 <div className="flex items-center gap-4">
                   <div className="p-3 rounded-2xl bg-indigo-500/10 text-indigo-500">
@@ -176,14 +162,14 @@ const Settings: React.FC = () => {
                     <p className="text-sm font-bold uppercase tracking-tight">
                       Export to CSV
                     </p>
-                    <p className="text-[10px] text-foreground/40 font-medium">
+                    <p className="text-[10px] opacity-50 font-medium">
                       Backup your transactions
                     </p>
                   </div>
                 </div>
               </button>
 
-              <label className="w-full px-6 py-5 flex items-center justify-between hover:bg-secondary/5 transition-colors cursor-pointer">
+              <label className="w-full px-6 py-5 flex items-center justify-between hover:bg-secondary transition-colors cursor-pointer">
                 <div className="flex items-center gap-4">
                   <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-500">
                     <HugeiconsIcon icon={Upload01Icon} size={20} />
@@ -192,7 +178,7 @@ const Settings: React.FC = () => {
                     <p className="text-sm font-bold uppercase tracking-tight">
                       Import from CSV
                     </p>
-                    <p className="text-[10px] text-foreground/40 font-medium">
+                    <p className="text-[10px] opacity-50 font-medium">
                       Restore from a backup
                     </p>
                   </div>
@@ -207,17 +193,17 @@ const Settings: React.FC = () => {
 
               <button
                 onClick={resetAllData}
-                className="w-full px-6 py-5 flex items-center justify-between hover:bg-rose-500/5 transition-colors text-left group"
+                className="w-full px-6 py-5 flex items-center justify-between hover:bg-destructive/5 transition-colors text-left group"
               >
                 <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-2xl bg-rose-500/10 text-rose-500 group-hover:bg-rose-500 group-hover:text-white transition-colors">
+                  <div className="p-3 rounded-2xl bg-destructive/10 text-destructive group-hover:bg-destructive group-hover:text-white transition-colors">
                     <HugeiconsIcon icon={Delete02Icon} size={20} />
                   </div>
                   <div>
-                    <p className="text-sm font-bold uppercase tracking-tight text-rose-500">
+                    <p className="text-sm font-bold uppercase tracking-tight text-destructive">
                       Reset & Delete All
                     </p>
-                    <p className="text-[10px] text-foreground/40 font-medium">
+                    <p className="text-[10px] opacity-50 font-medium">
                       Wipe all application data
                     </p>
                   </div>
@@ -229,13 +215,13 @@ const Settings: React.FC = () => {
 
         {/* Appearance Section */}
         <section className="space-y-4">
-          <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-foreground/40 ml-1">
+          <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-foreground/30 ml-1">
             Appearance
           </h3>
-          <Card className="bg-card border-secondary/30 rounded-3xl overflow-hidden shadow-sm">
+          <Card className="bg-card border-border rounded-[32px] overflow-hidden shadow-sm">
             <button
               onClick={toggleTheme}
-              className="w-full px-6 py-5 flex items-center justify-between hover:bg-secondary/5 transition-colors text-left"
+              className="w-full px-6 py-5 flex items-center justify-between hover:bg-secondary transition-colors text-left"
             >
               <div className="flex items-center gap-4">
                 <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-500">
@@ -248,16 +234,18 @@ const Settings: React.FC = () => {
                   <p className="text-sm font-bold uppercase tracking-tight">
                     Theme Mode
                   </p>
-                  <p className="text-[10px] text-foreground/40 font-medium">
+                  <p className="text-[10px] opacity-50 font-medium">
                     Switch to {theme === 'light' ? 'Dark' : 'Light'} mode
                   </p>
                 </div>
               </div>
-              <div className="w-12 h-6 bg-secondary/30 rounded-full relative p-1 transition-colors">
+              <div className="w-12 h-6 bg-secondary rounded-full relative p-1 transition-colors">
                 <div
                   className={cn(
                     'w-4 h-4 rounded-full transition-all duration-300',
-                    theme === 'dark' ? 'bg-primary ml-6' : 'bg-white ml-0',
+                    theme === 'dark'
+                      ? 'bg-primary ml-6'
+                      : 'bg-white dark:bg-slate-400 ml-0',
                   )}
                 />
               </div>
@@ -267,22 +255,22 @@ const Settings: React.FC = () => {
 
         {/* About Section */}
         <section className="space-y-4">
-          <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-foreground/40 ml-1">
+          <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-foreground/30 ml-1">
             About App
           </h3>
-          <Card className="bg-card border-secondary/30 rounded-3xl p-6 shadow-sm flex flex-col items-center text-center space-y-4 text-card-foreground">
-            <div className="p-4 rounded-3xl bg-primary/10 text-primary">
-              <HugeiconsIcon icon={InformationCircleIcon} size={32} />
+          <Card className="bg-card border-border rounded-[32px] p-8 shadow-sm flex flex-col items-center text-center space-y-5">
+            <div className="p-5 rounded-[2rem] bg-primary/10 text-primary">
+              <HugeiconsIcon icon={InformationCircleIcon} size={40} />
             </div>
-            <div>
-              <p className="text-lg font-black uppercase tracking-tighter">
+            <div className="space-y-1">
+              <p className="text-xl font-black uppercase tracking-tighter">
                 Factuang
               </p>
-              <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">
+              <p className="text-[10px] font-black text-primary uppercase tracking-[0.4em]">
                 Version 0.0.1
               </p>
             </div>
-            <p className="text-xs font-medium px-4 opacity-60">
+            <p className="text-[11px] font-medium px-4 opacity-50 leading-relaxed">
               A simple and modern way to track your daily expenses. Built with
               React, Dexie, and Hugeicons.
             </p>

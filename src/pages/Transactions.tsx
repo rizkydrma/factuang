@@ -45,15 +45,15 @@ const Transactions: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen animate-in fade-in duration-700">
+    <div className="flex flex-col min-h-screen animate-in fade-in duration-700 bg-background transition-colors duration-300">
       {/* Page Header */}
-      <header className="px-8 pt-8 pb-6 flex items-center justify-between bg-background border-b border-border">
+      <header className="px-8 pt-10 pb-6 flex items-center justify-between border-b border-border bg-background">
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate('/')}
-            className="rounded-full hover:bg-secondary/20"
+            className="rounded-full hover:bg-secondary"
           >
             <HugeiconsIcon icon={ArrowLeft01Icon} size={24} strokeWidth={2.5} />
           </Button>
@@ -69,7 +69,7 @@ const Transactions: React.FC = () => {
         <HugeiconsIcon
           icon={Search01Icon}
           size={24}
-          className="text-foreground/30"
+          className="text-foreground/20"
         />
       </header>
 
@@ -82,19 +82,19 @@ const Transactions: React.FC = () => {
           />
           <Input
             type="text"
-            placeholder="Search categories..."
+            placeholder="Search transactions..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-12 h-14 bg-card border-secondary rounded-2xl focus-visible:ring-primary font-bold placeholder:text-foreground/20 shadow-sm"
+            className="pl-12 h-14 bg-card border-border rounded-2xl focus-visible:ring-primary/20 font-bold placeholder:text-foreground/20 shadow-sm"
           />
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {transactions.length > 0 ? (
             transactions.map((t) => (
               <Card
                 key={t.id}
-                className="group relative bg-card border-secondary/50 p-5 rounded-3xl flex items-center justify-between hover:border-primary transition-all duration-300 shadow-sm shadow-secondary/10"
+                className="group relative bg-card border border-border/50 p-5 rounded-[2rem] flex items-center justify-between hover:border-primary/20 transition-all duration-300 shadow-sm"
               >
                 <div className="flex items-center gap-4">
                   <div className="p-3 rounded-2xl bg-secondary text-primary">
@@ -105,10 +105,10 @@ const Transactions: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-0.5">
-                    <p className="text-sm font-black uppercase tracking-tight text-foreground">
+                    <p className="text-sm font-bold uppercase tracking-tight text-foreground">
                       {t.category}
                     </p>
-                    <p className="text-[10px] text-foreground/40 font-black uppercase tracking-widest">
+                    <p className="text-[10px] text-foreground/40 font-bold uppercase tracking-widest">
                       {new Date(t.date).toLocaleDateString('id-ID', {
                         day: 'numeric',
                         month: 'short',
@@ -116,7 +116,7 @@ const Transactions: React.FC = () => {
                       })}
                     </p>
                     {t.note && (
-                      <p className="text-[10px] text-foreground/60 italic font-medium mt-1 truncate max-w-[150px]">
+                      <p className="text-[10px] text-foreground/50 italic font-medium mt-1 truncate max-w-[150px]">
                         {t.note}
                       </p>
                     )}
@@ -124,14 +124,14 @@ const Transactions: React.FC = () => {
                 </div>
 
                 <div className="flex flex-col items-end gap-2">
-                  <p className="text-sm font-black tracking-tighter text-foreground">
+                  <p className="text-sm font-black tracking-tight text-foreground">
                     {formatCurrency(t.amount).replace(',00', '')}
                   </p>
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => t.id && handleDelete(t.id)}
-                    className="h-8 w-8 text-foreground/10 hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all opacity-0 group-hover:opacity-100 active:scale-90"
+                    className="h-8 w-8 text-foreground/5 hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all opacity-0 group-hover:opacity-100 active:scale-90 flex items-center justify-center"
                     aria-label="Delete"
                   >
                     <HugeiconsIcon icon={Delete02Icon} size={16} />
@@ -141,10 +141,10 @@ const Transactions: React.FC = () => {
             ))
           ) : (
             <div className="py-20 flex flex-col items-center justify-center text-foreground/10 space-y-4">
-              <div className="p-8 bg-card border border-secondary rounded-full shadow-sm">
+              <div className="p-8 bg-card border border-border/50 rounded-[2.5rem] shadow-sm">
                 <HugeiconsIcon icon={Search01Icon} size={48} strokeWidth={1} />
               </div>
-              <p className="text-xs font-black uppercase tracking-[0.3em]">
+              <p className="text-[10px] font-black uppercase tracking-[0.3em]">
                 No records found
               </p>
             </div>
