@@ -5,7 +5,6 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import {
   Delete02Icon,
   Invoice01Icon,
-  FilterIcon,
   Tag01Icon,
   SpoonAndForkIcon,
   Car01Icon,
@@ -162,11 +161,6 @@ const Transactions: React.FC = () => {
     );
   }, [transactions]);
 
-  const totalFiltered = useMemo(
-    () => transactions.reduce((acc, t) => acc + t.amount, 0),
-    [transactions],
-  );
-
   const handleDelete = async (id: number) => {
     if (confirm('Hapus transaksi ini?')) {
       await db.transactions.delete(id);
@@ -175,19 +169,7 @@ const Transactions: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background transition-colors duration-300">
-      <PageHeader
-        title="History"
-        subtitle={`${transactions.length} Records Found`}
-        showBack
-        rightAction={
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-white/20 rounded-full border border-white/10 text-white">
-            <HugeiconsIcon icon={FilterIcon} size={12} />
-            <span className="text-[10px] font-black uppercase tracking-widest leading-none">
-              {formatCurrency(totalFiltered)}
-            </span>
-          </div>
-        }
-      />
+      <PageHeader title="History" subtitle="Riwayat Transaksi" showBack />
 
       <main className="flex-1 p-6 pb-32">
         <div className="mb-8">

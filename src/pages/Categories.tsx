@@ -1,9 +1,7 @@
 import { Button } from '@/components/ui/button';
 import {
   Drawer,
-  DrawerClose,
   DrawerContent,
-  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
@@ -161,34 +159,20 @@ const Categories: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 transition-colors duration-300">
+    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 transition-colors duration-300 relative">
       <PageHeader
         title="Categories"
-        subtitle={`${categories.length} Total Items`}
+        subtitle="Manage your record types"
         showBack
-        rightAction={
-          <button
-            onClick={() => setIsAdding(!isAdding)}
-            className={cn(
-              'p-2.5 rounded-2xl transition-all duration-300 flex items-center justify-center shadow-sm',
-              isAdding
-                ? 'bg-destructive text-destructive-foreground rotate-45'
-                : 'bg-white/20 text-white border border-white/10 hover:bg-white/30',
-            )}
-          >
-            <HugeiconsIcon icon={Add01Icon} size={18} strokeWidth={2.5} />
-          </button>
-        }
       />
 
-      <main className="max-w-2xl mx-auto px-6 pt-6 pb-24 space-y-8">
+      <main className="max-w-2xl mx-auto px-6 pt-6 pb-32 space-y-8">
         <SearchBar
           value={searchTerm}
           onChange={setSearchTerm}
           placeholder="Quick search..."
         />
 
-        {/* Categories Stack */}
         <section className="flex flex-col gap-3">
           <AnimatePresence mode="popLayout">
             {filteredCategories.length > 0 ? (
@@ -201,7 +185,7 @@ const Categories: React.FC = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="group relative bg-card border border-border/40 rounded-xl p-4 flex items-center justify-between hover:border-primary/30 hover:shadow-xl hover:shadow-black/5 transition-all cursor-default"
+                    className="group relative bg-card border border-border/40 rounded-xl p-4 flex items-center justify-between hover:border-primary/30 transition-all cursor-default shadow-sm"
                   >
                     <div className="flex items-center gap-4">
                       <div
@@ -222,7 +206,7 @@ const Categories: React.FC = () => {
                           {cat.name}
                         </p>
                         <p className="text-[10px] font-medium opacity-30 uppercase tracking-[0.1em]">
-                          Reference ID #{cat.id}
+                          Ref #{cat.id}
                         </p>
                       </div>
                     </div>
@@ -251,7 +235,17 @@ const Categories: React.FC = () => {
         </section>
       </main>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Floating Action Button for Categories */}
+      <div className="fixed bottom-24 right-6 z-40">
+        <button
+          onClick={() => setIsAdding(true)}
+          className="w-14 h-14 bg-primary text-white rounded-2xl shadow-xl shadow-primary/30 flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
+          aria-label="Add Category"
+        >
+          <HugeiconsIcon icon={Add01Icon} size={24} strokeWidth={3} />
+        </button>
+      </div>
+
       <Dialog
         open={!!categoryToDelete}
         onOpenChange={(open) => !open && setCategoryToDelete(null)}
@@ -264,7 +258,7 @@ const Categories: React.FC = () => {
             <DialogTitle className="text-xl font-bold uppercase tracking-tight italic text-center">
               Are you sure?
             </DialogTitle>
-            <DialogDescription className="text-xs font-medium opacity-60 text-center px-2 leading-relaxed">
+            <DialogDescription className="text-xs font-medium opacity-60 text-center px-2 leading-relaxed text-foreground/60">
               This will permanently delete the category{' '}
               <span className="font-bold text-foreground">
                 "{categoryToDelete?.name}"
@@ -283,7 +277,7 @@ const Categories: React.FC = () => {
             <Button
               variant="ghost"
               onClick={() => setCategoryToDelete(null)}
-              className="w-full h-11 rounded-xl font-bold opacity-40 hover:opacity-100 transition-all"
+              className="w-full h-11 rounded-xl font-bold opacity-40 hover:opacity-100 transition-all text-foreground"
             >
               Cancel
             </Button>
@@ -291,7 +285,6 @@ const Categories: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Add Category Drawer */}
       <Drawer open={isAdding} onOpenChange={setIsAdding}>
         <DrawerContent className="bg-card text-foreground">
           <div className="mx-auto w-full max-w-md text-foreground">
@@ -327,7 +320,7 @@ const Categories: React.FC = () => {
                       className={cn(
                         'aspect-square rounded-xl flex items-center justify-center transition-all',
                         selectedIcon === name
-                          ? 'bg-primary text-primary-foreground scale-110 shadow-lg shadow-primary/20'
+                          ? 'bg-primary text-white scale-110 shadow-lg shadow-primary/20'
                           : 'bg-secondary text-foreground/40 hover:bg-secondary/80',
                       )}
                     >
@@ -363,31 +356,20 @@ const Categories: React.FC = () => {
                 </div>
               </div>
 
-              <div className="pt-2">
+              <div className="pt-2 pb-6">
                 <Button
                   type="submit"
                   disabled={!newCategory.trim()}
-                  className="w-full h-14 rounded-2xl text-base font-bold uppercase tracking-widest shadow-xl shadow-primary/20"
+                  className="w-full h-14 rounded-2xl text-base font-bold uppercase tracking-widest shadow-xl shadow-primary/30"
                 >
                   Create Category
                 </Button>
               </div>
             </form>
-            <DrawerFooter>
-              <DrawerClose asChild>
-                <Button
-                  variant="ghost"
-                  className="rounded-xl font-bold opacity-40"
-                >
-                  Cancel
-                </Button>
-              </DrawerClose>
-            </DrawerFooter>
           </div>
         </DrawerContent>
       </Drawer>
 
-      {/* Decorative Blur */}
       <div className="fixed bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent pointer-events-none" />
     </div>
   );
