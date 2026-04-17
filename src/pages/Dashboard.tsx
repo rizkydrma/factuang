@@ -189,7 +189,7 @@ const Dashboard: React.FC = () => {
                     </p>
                     <button
                       onClick={() => t.id && handleDelete(t.id)}
-                      className="p-1 text-foreground/5 hover:text-destructive transition-all flex items-center justify-center"
+                      className="p-2 text-foreground/20 hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all flex items-center justify-center active:scale-90"
                     >
                       <HugeiconsIcon icon={Delete02Icon} size={14} />
                     </button>

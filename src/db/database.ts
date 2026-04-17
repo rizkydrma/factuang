@@ -5,6 +5,8 @@ interface Transaction {
   type: 'expense';
   amount: number;
   category: string;
+  categoryIcon?: string;
+  categoryColor?: string;
   date: string;
   note?: string;
 }
@@ -22,6 +24,11 @@ const db = new Dexie('FactuangDB') as Dexie & {
 };
 
 // Schema definition
+db.version(5).stores({
+  transactions: '++id, type, category, categoryIcon, categoryColor, date',
+  categories: '++id, &name, icon, color',
+});
+
 db.version(4).stores({
   transactions: '++id, type, category, date',
   categories: '++id, &name, icon, color',

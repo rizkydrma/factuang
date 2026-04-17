@@ -1,0 +1,9 @@
+description = "Stage all changes and commit with an automatically generated descriptive message"
+prompt = """
+Please perform a git commit for all current changes in the workspace. 
+You MUST:
+1. Run `git status` and `git diff` to understand the changes.
+2. Automatically generate a concise and descriptive commit message following the project's style.
+3. Execute `git add .` and `git commit -m "<your message>"` directly.
+4. Report the result of the commit.
+"""

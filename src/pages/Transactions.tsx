@@ -1,21 +1,148 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '../db/database';
+import { db, type Transaction } from '../db/database';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
   Delete02Icon,
   Search01Icon,
   Invoice01Icon,
   ArrowLeft01Icon,
+  Cancel01Icon,
+  FilterIcon,
+  Tag01Icon,
+  SpoonAndForkIcon,
+  Car01Icon,
+  ShoppingBag01Icon,
+  FavouriteIcon,
+  PackageIcon,
+  Coffee01Icon,
+  Home01Icon,
+  FlashIcon,
+  Airplane01Icon,
+  GiftIcon,
+  Dumbbell01Icon,
+  Pizza01Icon,
+  Briefcase01Icon,
+  Camera01Icon,
+  MusicNote01Icon,
+  GlobeIcon,
+  Joystick01Icon,
+  Certificate01Icon,
 } from '@hugeicons/core-free-icons';
 import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+
+// --- Types & Constants ---
+
+const ICON_MAP: Record<string, any> = {
+  Utensils: SpoonAndForkIcon,
+  Car: Car01Icon,
+  ShoppingBag: ShoppingBag01Icon,
+  Receipt: Invoice01Icon,
+  Gamepad2: Joystick01Icon,
+  HeartPulse: FavouriteIcon,
+  GraduationCap: Certificate01Icon,
+  Heart: FavouriteIcon,
+  Box: PackageIcon,
+  Coffee: Coffee01Icon,
+  Home: Home01Icon,
+  Zap: FlashIcon,
+  Plane: Airplane01Icon,
+  Gift: GiftIcon,
+  Dumbbell: Dumbbell01Icon,
+  Pizza: Pizza01Icon,
+  Briefcase: Briefcase01Icon,
+  Camera: Camera01Icon,
+  Music: MusicNote01Icon,
+  Globe: GlobeIcon,
+};
+
+// --- Utilities ---
+
+const formatCurrency = (val: number) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+  })
+    .format(val)
+    .replace(',00', '');
+};
+
+const formatDateHeader = (dateStr: string) => {
+  const date = new Date(dateStr);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  if (date.toDateString() === today.toDateString()) return 'Hari Ini';
+  if (date.toDateString() === yesterday.toDateString()) return 'Kemarin';
+
+  return date.toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+};
+
+// --- Sub-components ---
+
+const TransactionRow: React.FC<{
+  transaction: Transaction;
+  onDelete: (id: number) => void;
+}> = ({ transaction: t, onDelete }) => {
+  const icon = t.categoryIcon
+    ? ICON_MAP[t.categoryIcon] || Tag01Icon
+    : Tag01Icon;
+  const colorClass = t.categoryColor || 'bg-slate-500';
+
+  return (
+    <div className="group flex items-center justify-between py-3.5 px-4 hover:bg-secondary/20 transition-all duration-200">
+      <div className="flex items-center gap-3.5 min-w-0">
+        <div
+          className={cn(
+            'w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm transition-transform group-active:scale-95',
+            colorClass.replace('bg-', 'bg-') + '/10',
+            colorClass.replace('bg-', 'text-'),
+          )}
+        >
+          <HugeiconsIcon icon={icon} size={18} strokeWidth={2.5} />
+        </div>
+        <div className="min-w-0">
+          <p className="text-[13px] font-bold text-foreground/90 leading-none truncate">
+            {t.category}
+          </p>
+          {t.note && (
+            <p className="text-[10px] text-foreground/40 font-medium truncate mt-1 max-w-[180px]">
+              {t.note}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3 shrink-0">
+        <p className="text-[13px] font-black tracking-tight text-foreground">
+          {formatCurrency(t.amount)}
+        </p>
+        <button
+          onClick={() => t.id && onDelete(t.id)}
+          className="p-2 rounded-lg text-foreground/20 hover:text-destructive hover:bg-destructive/10 transition-all flex items-center justify-center active:scale-90"
+        >
+          <HugeiconsIcon icon={Delete02Icon} size={14} />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// --- Main Page Component ---
 
 const Transactions: React.FC = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Data Fetching
   const transactions =
     useLiveQuery(
       () =>
@@ -30,127 +157,127 @@ const Transactions: React.FC = () => {
       [searchTerm],
     ) || [];
 
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-    }).format(val);
-  };
+  // Grouping Logic
+  const groupedTransactions = useMemo(() => {
+    return transactions.reduce(
+      (groups, t) => {
+        const date = t.date;
+        if (!groups[date]) groups[date] = [];
+        groups[date].push(t);
+        return groups;
+      },
+      {} as Record<string, Transaction[]>,
+    );
+  }, [transactions]);
+
+  const totalFiltered = useMemo(
+    () => transactions.reduce((acc, t) => acc + t.amount, 0),
+    [transactions],
+  );
 
   const handleDelete = async (id: number) => {
-    if (confirm('Delete this transaction?')) {
+    if (confirm('Hapus transaksi ini?')) {
       await db.transactions.delete(id);
     }
   };
 
   return (
-    <div className="flex flex-col min-h-screen animate-in fade-in duration-700 bg-background transition-colors duration-300">
-      {/* Page Header */}
-      <header className="px-8 pt-10 pb-6 flex items-center justify-between border-b border-border bg-background">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate('/')}
-            className="rounded-full hover:bg-secondary"
-          >
-            <HugeiconsIcon icon={ArrowLeft01Icon} size={24} strokeWidth={2.5} />
-          </Button>
-          <div className="space-y-0.5">
-            <h2 className="text-xl font-black uppercase tracking-tighter text-foreground">
-              History
-            </h2>
-            <p className="text-[10px] text-primary font-black uppercase tracking-[0.2em]">
-              All expenses
-            </p>
+    <div className="flex flex-col min-h-screen bg-background transition-colors duration-300">
+      {/* Editorial Header */}
+      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border px-6 pt-8 pb-5">
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate('/')}
+              className="p-2 hover:bg-secondary rounded-full text-foreground/60 transition-colors flex items-center justify-center"
+            >
+              <HugeiconsIcon icon={ArrowLeft01Icon} size={20} />
+            </button>
+            <div>
+              <h1 className="text-xl font-black uppercase tracking-tighter italic leading-none">
+                History
+              </h1>
+              <p className="text-[9px] font-bold opacity-30 uppercase tracking-[0.2em] mt-1">
+                Records Found: {transactions.length}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-full border border-primary/5">
+            <HugeiconsIcon
+              icon={FilterIcon}
+              size={12}
+              className="text-primary"
+            />
+            <span className="text-[10px] font-black text-primary uppercase tracking-widest leading-none">
+              {formatCurrency(totalFiltered)}
+            </span>
           </div>
         </div>
-        <HugeiconsIcon
-          icon={Search01Icon}
-          size={24}
-          className="text-foreground/20"
-        />
-      </header>
 
-      <div className="flex-1 p-6 space-y-6">
+        {/* Search Bar */}
         <div className="relative group">
           <HugeiconsIcon
             icon={Search01Icon}
+            size={14}
             className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground/30 group-focus-within:text-primary transition-colors"
-            size={18}
           />
           <Input
-            type="text"
-            placeholder="Search transactions..."
+            placeholder="Search category or notes..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-12 h-14 bg-card border-border rounded-2xl focus-visible:ring-primary/20 font-bold placeholder:text-foreground/20 shadow-sm"
+            className="pl-11 h-11 bg-secondary/30 border-transparent rounded-2xl text-[11px] font-bold focus-visible:ring-primary/20 shadow-none placeholder:text-foreground/20"
           />
-        </div>
-
-        <div className="space-y-3">
-          {transactions.length > 0 ? (
-            transactions.map((t) => (
-              <Card
-                key={t.id}
-                className="group relative bg-card border border-border/50 p-5 rounded-2xl flex items-center justify-between hover:border-primary/20 transition-all duration-300 shadow-sm"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-2xl bg-secondary text-primary">
-                    <HugeiconsIcon
-                      icon={Invoice01Icon}
-                      size={20}
-                      strokeWidth={2.5}
-                    />
-                  </div>
-                  <div className="space-y-0.5">
-                    <p className="text-sm font-bold uppercase tracking-tight text-foreground">
-                      {t.category}
-                    </p>
-                    <p className="text-[10px] text-foreground/40 font-bold uppercase tracking-widest">
-                      {new Date(t.date).toLocaleDateString('id-ID', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
-                    </p>
-                    {t.note && (
-                      <p className="text-[10px] text-foreground/50 italic font-medium mt-1 truncate max-w-[150px]">
-                        {t.note}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex flex-col items-end gap-2">
-                  <p className="text-sm font-black tracking-tight text-foreground">
-                    {formatCurrency(t.amount).replace(',00', '')}
-                  </p>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => t.id && handleDelete(t.id)}
-                    className="h-8 w-8 text-foreground/5 hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all opacity-0 group-hover:opacity-100 active:scale-90 flex items-center justify-center"
-                    aria-label="Delete"
-                  >
-                    <HugeiconsIcon icon={Delete02Icon} size={16} />
-                  </Button>
-                </div>
-              </Card>
-            ))
-          ) : (
-            <div className="py-20 flex flex-col items-center justify-center text-foreground/10 space-y-4">
-              <div className="p-8 bg-card border border-border/50 rounded-3xl shadow-sm">
-                <HugeiconsIcon icon={Search01Icon} size={48} strokeWidth={1} />
-              </div>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em]">
-                No records found
-              </p>
-            </div>
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground/20 hover:text-foreground transition-colors"
+            >
+              <HugeiconsIcon icon={Cancel01Icon} size={14} />
+            </button>
           )}
         </div>
-      </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1 p-6 pb-32">
+        {transactions.length > 0 ? (
+          <div className="space-y-10">
+            {Object.entries(groupedTransactions).map(([date, items]) => (
+              <div key={date} className="space-y-4">
+                {/* Date Divider */}
+                <div className="flex items-center gap-4 px-2">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/30 whitespace-nowrap">
+                    {formatDateHeader(date)}
+                  </h3>
+                  <div className="h-px bg-border/40 w-full" />
+                </div>
+
+                {/* List Container */}
+                <div className="bg-card/40 rounded-[1.5rem] border border-border/10 overflow-hidden shadow-sm shadow-black/[0.02]">
+                  <div className="divide-y divide-border/10">
+                    {items.map((t) => (
+                      <TransactionRow
+                        key={t.id}
+                        transaction={t}
+                        onDelete={handleDelete}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="py-24 flex flex-col items-center justify-center text-center opacity-20">
+            <div className="p-10 bg-secondary rounded-full mb-6">
+              <HugeiconsIcon icon={Search01Icon} size={56} strokeWidth={1} />
+            </div>
+            <p className="text-[11px] font-black uppercase tracking-[0.4em]">
+              No transactions recorded
+            </p>
+          </div>
+        )}
+      </main>
     </div>
   );
 };

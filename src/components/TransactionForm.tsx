@@ -126,10 +126,14 @@ const TransactionForm: React.FC = () => {
     const finalAmount = calculateResult(expression);
     if (!finalAmount || finalAmount === '0') return;
 
+    const selectedCat = categories.find((c) => c.name === category);
+
     await db.transactions.add({
       type: 'expense',
       amount: Number(finalAmount),
       category: category || 'Other',
+      categoryIcon: selectedCat?.icon,
+      categoryColor: selectedCat?.color,
       date,
       note,
     });
