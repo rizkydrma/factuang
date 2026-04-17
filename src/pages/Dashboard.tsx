@@ -69,76 +69,78 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen animate-in fade-in  bg-background transition-colors duration-300">
+    <div className="flex flex-col min-h-screen animate-in fade-in bg-background transition-colors duration-300">
       <PageHeader
         title="Factuang"
         subtitle="Financial Overview"
         leftAction={
-          <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white border border-white/10 shadow-inner">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shadow-inner">
             <HugeiconsIcon icon={UserIcon} size={20} />
           </div>
         }
       />
 
       <main className="flex-1">
-        {/* Summary Section */}
-        <section className="relative px-8 pt-8 pb-12 space-y-10 bg-linear-to-br from-primary via-blue-600 to-indigo-600 dark:from-primary dark:via-blue-800 dark:to-indigo-950 rounded-b-[2.5rem] shadow-xl shadow-primary/20 overflow-hidden">
+        {/* Summary Section - Refined Premium Look */}
+        <section className="relative px-8 pt-8 pb-12 space-y-10 bg-card rounded-b-[2.5rem] shadow-sm border-b border-border/40 overflow-hidden">
           {/* Subtle Background Glow Elements */}
-          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-white/20 blur-[80px] rounded-full pointer-events-none" />
-          <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-48 h-48 bg-black/10 blur-[60px] rounded-full pointer-events-none" />
+          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-primary/10 blur-[80px] rounded-full pointer-events-none" />
+          <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-48 h-48 bg-primary/5 blur-[60px] rounded-full pointer-events-none" />
 
-          <div className="relative flex items-center justify-between">
-            <h2 className="text-2xl font-bold tracking-tight capitalize text-white italic drop-shadow-sm">
+          <div className="relative flex items-center justify-between mt-2">
+            <h2 className="text-[1.35rem] font-semibold tracking-tight capitalize text-foreground">
               {monthYear}
             </h2>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => changeMonth(-1)}
-                className="p-2 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full transition-all flex items-center justify-center text-white active:scale-90 border border-white/10 shadow-inner"
+                aria-label="Previous month"
+                className="p-2.5 bg-secondary/50 hover:bg-secondary rounded-full transition-colors flex items-center justify-center text-foreground active:scale-95 border border-border/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 <HugeiconsIcon
                   icon={ArrowLeft01Icon}
-                  size={20}
+                  size={18}
                   strokeWidth={2.5}
                 />
               </button>
               <button
                 onClick={() => changeMonth(1)}
-                className="p-2 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full transition-all flex items-center justify-center text-white active:scale-90 border border-white/10 shadow-inner"
+                aria-label="Next month"
+                className="p-2.5 bg-secondary/50 hover:bg-secondary rounded-full transition-colors flex items-center justify-center text-foreground active:scale-95 border border-border/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 <HugeiconsIcon
                   icon={ArrowRight01Icon}
-                  size={20}
+                  size={18}
                   strokeWidth={2.5}
                 />
               </button>
             </div>
           </div>
 
-          <div className="relative space-y-1">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60">
+          <div className="relative space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Total Pengeluaran
             </p>
-            <p className="text-5xl font-black tracking-tighter text-white drop-shadow-lg">
+            <p className="text-[2.75rem] font-bold tracking-tight text-foreground tabular-nums drop-shadow-sm leading-none">
               {formatCurrency(totalExpense)}
             </p>
           </div>
         </section>
 
         {/* Content Section Area */}
-        <div className="px-6 space-y-8 pb-32">
+        <div className="px-6 space-y-8 pb-32 pt-6">
           <section className="space-y-4">
             <div className="flex items-center justify-between px-2">
-              <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-foreground/30">
+              <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/80">
                 Transaksi Bulan Ini
               </h3>
-              <span className="text-[9px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full uppercase tracking-widest border border-primary/5">
+              <span className="text-[10px] font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-primary/10">
                 {transactions.length} Item
               </span>
             </div>
 
-            <div className="bg-card/40 rounded-[1.5rem] border border-border/10 overflow-hidden shadow-sm shadow-black/2">
-              <div className="divide-y divide-border/10">
+            <div className="bg-card rounded-[1.5rem] border border-border/40 overflow-hidden shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+              <div className="divide-y divide-border/40">
                 {transactions.length > 0 ? (
                   [...transactions].reverse().map((t) => {
                     const icon = t.categoryIcon
@@ -149,38 +151,38 @@ const Dashboard: React.FC = () => {
                     return (
                       <div
                         key={t.id}
-                        className="group flex items-center justify-between py-3.5 px-4 hover:bg-secondary/20 transition-all duration-200"
+                        className="group flex items-center justify-between py-4 px-4 hover:bg-secondary/40 transition-colors duration-200"
                       >
-                        <div className="flex items-center gap-3.5 min-w-0">
+                        <div className="flex items-center gap-4 min-w-0">
                           <div
                             className={cn(
-                              'w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm',
-                              colorClass.replace('bg-', 'bg-') + '/10',
+                              'w-11 h-11 rounded-[1.15rem] flex items-center justify-center shrink-0 shadow-sm border border-border/10',
+                              colorClass.replace('bg-', 'bg-') + '/15',
                               colorClass.replace('bg-', 'text-'),
                             )}
                           >
                             <HugeiconsIcon
                               icon={icon}
-                              size={18}
-                              strokeWidth={2.5}
+                              size={20}
+                              strokeWidth={2}
                             />
                           </div>
-                          <div className="min-w-0">
-                            <p className="text-[13px] font-bold text-foreground/90 leading-none truncate">
+                          <div className="min-w-0 space-y-0.5">
+                            <p className="text-[14px] font-semibold text-foreground leading-tight truncate">
                               {t.category}
                             </p>
-                            <div className="flex items-center gap-1.5 mt-1">
-                              <p className="text-[9px] text-foreground/40 font-bold uppercase tracking-wider whitespace-nowrap">
+                            <div className="flex items-center gap-1.5">
+                              <p className="text-[11px] text-muted-foreground font-medium whitespace-nowrap">
                                 {new Date(t.date).toLocaleDateString('id-ID', {
                                   day: 'numeric',
                                   month: 'short',
                                 })}
                               </p>
                               {t.note && (
-                                <span className="w-0.5 h-2 bg-border/50 rounded-full" />
+                                <span className="w-1 h-1 bg-border rounded-full" />
                               )}
                               {t.note && (
-                                <p className="text-[9px] text-foreground/50 italic font-medium truncate max-w-[120px]">
+                                <p className="text-[11px] text-muted-foreground/80 font-medium truncate max-w-[120px]">
                                   {t.note}
                                 </p>
                               )}
@@ -188,26 +190,31 @@ const Dashboard: React.FC = () => {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-3 shrink-0">
-                          <p className="text-[13px] font-black tracking-tight text-foreground">
+                        <div className="flex items-center gap-4 shrink-0">
+                          <p className="text-[15px] font-semibold tracking-tight text-foreground tabular-nums">
                             {formatCurrency(t.amount)}
                           </p>
                           <button
                             onClick={() => t.id && handleDelete(t.id)}
-                            className="p-2 text-foreground/20 hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all flex items-center justify-center active:scale-90"
+                            aria-label={`Hapus transaksi ${t.category}`}
+                            className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-colors flex items-center justify-center active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive"
                           >
-                            <HugeiconsIcon icon={Delete02Icon} size={14} />
+                            <HugeiconsIcon
+                              icon={Delete02Icon}
+                              size={16}
+                              strokeWidth={2}
+                            />
                           </button>
                         </div>
                       </div>
                     );
                   })
                 ) : (
-                  <div className="py-16 text-center flex flex-col items-center justify-center gap-3 opacity-20">
-                    <div className="p-8 bg-secondary rounded-full">
+                  <div className="py-16 text-center flex flex-col items-center justify-center gap-4 opacity-50">
+                    <div className="p-6 bg-secondary/50 rounded-full text-muted-foreground/60">
                       <HugeiconsIcon icon={Invoice01Icon} size={32} />
                     </div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em]">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                       Belum ada transaksi
                     </p>
                   </div>

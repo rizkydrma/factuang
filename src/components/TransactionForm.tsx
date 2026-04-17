@@ -64,9 +64,9 @@ const VoiceWaveform: React.FC = () => (
     {[1, 2, 3, 4, 5].map((i) => (
       <motion.div
         key={i}
-        className="w-1 bg-primary rounded-full"
+        className="w-1 bg-primary rounded-full h-[28px] origin-center"
         animate={{
-          height: [12, 28, 16, 24, 12],
+          scaleY: [0.4, 1, 0.6, 0.85, 0.4],
         }}
         transition={{
           duration: 0.6,
@@ -226,33 +226,37 @@ const TransactionForm: React.FC = () => {
       open={isAddModalOpen}
       onOpenChange={(open) => !open && closeAddModal()}
     >
-      <DrawerContent className="bg-background max-w-120 mx-auto rounded-t-[2.5rem] border-border shadow-2xl flex flex-col overflow-hidden max-h-[96vh] transition-colors duration-500">
-        {/* Immersive Voice Overlay */}
+      <DrawerContent className="bg-background max-w-md mx-auto rounded-t-[2.5rem] border-none shadow-[0_-8px_40px_rgba(0,0,0,0.12)] flex flex-col overflow-hidden max-h-[96vh] transition-transform duration-500 ring-1 ring-border/5">
+        {/* Immersive Voice Overlay (Glassmorphism) */}
         <AnimatePresence>
           {isListening && (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 z-60 bg-primary flex flex-col items-center justify-center text-white p-8 space-y-8"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className="absolute inset-0 z-60 bg-background/80 backdrop-blur-2xl flex flex-col items-center justify-center p-8 space-y-10"
             >
-              <div className="space-y-2 text-center">
-                <h2 className="text-2xl font-black uppercase tracking-tighter italic">
-                  Listening...
+              <div className="space-y-3 text-center">
+                <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+                  Listening…
                 </h2>
-                <p className="text-xs font-bold opacity-60 uppercase tracking-widest text-white/80">
-                  Katakan jumlah dan catatan
+                <p className="text-[13px] font-medium text-muted-foreground/80">
+                  Speak the amount and category
                 </p>
               </div>
 
               <div className="relative">
                 <motion.div
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="absolute inset-0 bg-white/20 rounded-full blur-3xl"
+                  animate={{ scale: [1, 1.15, 1], opacity: [0.1, 0.2, 0.1] }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                  }}
+                  className="absolute inset-0 bg-primary rounded-full blur-3xl"
                 />
-                <div className="relative bg-white text-primary p-8 rounded-full shadow-2xl">
-                  <HugeiconsIcon icon={Mic01Icon} size={48} />
+                <div className="relative bg-primary/10 text-primary p-7 rounded-full shadow-inner ring-1 ring-primary/20">
+                  <HugeiconsIcon icon={Mic01Icon} size={42} />
                 </div>
               </div>
 
@@ -261,7 +265,8 @@ const TransactionForm: React.FC = () => {
               <Button
                 onClick={() => setIsListening(false)}
                 variant="outline"
-                className="rounded-full border-white/20 bg-white/10 hover:bg-white/20 text-white border-2 font-bold uppercase tracking-widest px-8"
+                className="rounded-full bg-background/50 hover:bg-muted text-foreground border-border/50 font-medium px-8 transition-colors focus-visible:ring-2"
+                aria-label="Cancel voice recording"
               >
                 Cancel
               </Button>
@@ -269,52 +274,56 @@ const TransactionForm: React.FC = () => {
           )}
         </AnimatePresence>
 
-        <DrawerHeader className="px-8 pt-8 pb-4 flex flex-row items-center justify-between shrink-0">
-          <div className="space-y-0.5">
-            <DrawerTitle className="text-xl font-black uppercase tracking-tighter italic leading-none">
+        <DrawerHeader className="px-8 pt-8 pb-5 flex flex-row items-center justify-between shrink-0">
+          <div className="space-y-1">
+            <DrawerTitle className="text-xl font-semibold tracking-tight leading-none text-foreground">
               New Record
             </DrawerTitle>
-            <p className="text-[10px] text-primary font-black uppercase tracking-[0.2em]">
-              Manual or Voice Entry
+            <p className="text-xs font-medium text-muted-foreground">
+              Add a new transaction
             </p>
           </div>
           <DrawerClose asChild>
-            <button className="p-2 bg-secondary rounded-full text-foreground/40 hover:text-primary transition-colors">
-              <HugeiconsIcon icon={Cancel01Icon} size={20} strokeWidth={2.5} />
+            <button
+              className="p-2.5 bg-secondary/50 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              aria-label="Close add record modal"
+            >
+              <HugeiconsIcon icon={Cancel01Icon} size={18} strokeWidth={2.5} />
             </button>
           </DrawerClose>
         </DrawerHeader>
 
         <form
           onSubmit={handleSubmit}
-          className="flex-1 overflow-y-auto px-8 py-4 space-y-8 pb-12 scrollbar-hide"
+          className="flex-1 overflow-y-auto px-8 py-2 space-y-7 pb-10 scrollbar-hide"
         >
           {/* Amount Display */}
-          <div className="relative group bg-secondary/30 rounded-[2rem] p-8 text-center space-y-3 overflow-hidden border border-transparent focus-within:border-primary/20 transition-all">
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-foreground/20">
+          <div className="relative group bg-secondary/20 rounded-[2rem] p-7 text-center space-y-2 overflow-hidden border border-border/30 focus-within:border-primary/30 focus-within:ring-4 focus-within:ring-primary/5 transition-colors">
+            <p className="text-xs font-medium tracking-wide text-muted-foreground">
               Spending Amount
             </p>
 
-            <div className="flex items-center justify-center gap-3">
-              <span className="text-xl font-black text-primary/30 mt-1">
+            <div className="flex items-center justify-center gap-2">
+              <span className="text-lg font-semibold text-muted-foreground/60 mt-0.5">
                 Rp
               </span>
-              <div className="text-5xl font-black tracking-tighter text-foreground truncate max-w-full">
+              <div className="text-[2.75rem] font-bold tracking-tight text-foreground tabular-nums truncate max-w-full leading-none">
                 {expression || '0'}
               </div>
             </div>
 
             {/* Voice Trigger Small */}
-            <div className="pt-4">
+            <div className="pt-3">
               <button
                 type="button"
                 onClick={startListening}
                 className={cn(
-                  'inline-flex items-center gap-2 px-5 py-2.5 rounded-full transition-all duration-300 font-bold text-[11px] uppercase tracking-widest shadow-sm',
+                  'inline-flex items-center gap-2 px-5 py-2 rounded-full transition-colors font-medium text-xs shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
                   isParsing
-                    ? 'bg-amber-100 text-amber-600'
-                    : 'bg-primary text-white shadow-primary/20 hover:scale-105 active:scale-95',
+                    ? 'bg-amber-100 text-amber-700'
+                    : 'bg-primary/10 text-primary hover:bg-primary/15 active:bg-primary/20',
                 )}
+                aria-label="Quick voice input"
               >
                 {isParsing ? (
                   <>
@@ -323,7 +332,7 @@ const TransactionForm: React.FC = () => {
                       size={14}
                       className="animate-spin"
                     />
-                    Parsing...
+                    Parsing…
                   </>
                 ) : (
                   <>
@@ -333,24 +342,24 @@ const TransactionForm: React.FC = () => {
                 )}
               </button>
             </div>
-
-            {/* Subtle Decoration */}
-            <div className="absolute -bottom-6 -right-6 opacity-[0.03] text-foreground pointer-events-none">
-              <HugeiconsIcon icon={Mic01Icon} size={120} />
-            </div>
           </div>
 
           {/* Form Grid */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-foreground/40 ml-1">
+          <div className="grid grid-cols-2 gap-5">
+            <div className="space-y-2.5">
+              <Label
+                htmlFor="category-select"
+                className="text-xs font-medium text-foreground ml-1"
+              >
                 Category
               </Label>
               <div className="relative">
                 <select
+                  id="category-select"
+                  name="category"
                   value={effectiveCategory}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full h-12 bg-secondary/50 border-none rounded-2xl font-bold text-xs uppercase tracking-wider px-4 appearance-none outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground"
+                  className="w-full h-12 bg-secondary/40 border border-transparent rounded-[1.25rem] font-medium text-[13px] px-4 appearance-none outline-none focus-visible:border-primary/40 focus-visible:ring-4 focus-visible:ring-primary/5 transition-colors text-foreground"
                 >
                   {categories.map((cat) => (
                     <option key={cat.id} value={cat.name}>
@@ -361,26 +370,31 @@ const TransactionForm: React.FC = () => {
                 <HugeiconsIcon
                   icon={ArrowDown01Icon}
                   size={14}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground/30 pointer-events-none"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
                 />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-foreground/40 ml-1">
+            <div className="space-y-2.5">
+              <Label
+                htmlFor="date-input"
+                className="text-xs font-medium text-foreground ml-1"
+              >
                 Date
               </Label>
               <input
+                id="date-input"
+                name="date"
                 type="date"
                 required
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full h-12 bg-secondary/50 border-none rounded-2xl font-bold text-xs px-4 outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground"
+                className="w-full h-12 bg-secondary/40 border border-transparent rounded-[1.25rem] font-medium text-[13px] px-4 outline-none focus-visible:border-primary/40 focus-visible:ring-4 focus-visible:ring-primary/5 transition-colors text-foreground tabular-nums hover:cursor-pointer"
               />
             </div>
           </div>
 
-          {/* Calculator Keypad - Compact */}
-          <div className="bg-secondary/20 p-2 rounded-[2rem] border border-border/50">
+          {/* Calculator Keypad - Clean styling */}
+          <div className="bg-secondary/10 p-1.5 rounded-[1.75rem] border border-border/40">
             <div className="grid grid-cols-4 gap-1.5">
               {[
                 '7',
@@ -405,11 +419,12 @@ const TransactionForm: React.FC = () => {
                   type="button"
                   variant="ghost"
                   onClick={() => handleKeyClick(k)}
+                  aria-label={k === 'C' ? 'Clear' : k}
                   className={cn(
-                    'h-12 font-bold text-base rounded-xl transition-all active:bg-primary/10 active:text-primary',
+                    'h-13 font-medium text-[15px] rounded-2xl transition-colors active:scale-95 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary',
                     k === 'C'
-                      ? 'text-destructive hover:bg-destructive/5'
-                      : 'bg-card/40 hover:bg-card shadow-sm border border-border/5',
+                      ? 'text-destructive hover:bg-destructive/10'
+                      : 'bg-card/60 hover:bg-card border border-border/30 shadow-[0_1px_2px_rgba(0,0,0,0.02)]',
                   )}
                 >
                   {k}
@@ -419,14 +434,16 @@ const TransactionForm: React.FC = () => {
                 type="button"
                 variant="ghost"
                 onClick={() => handleKeyClick('.')}
-                className="h-12 font-bold text-base rounded-xl bg-card/40 border border-border/5 shadow-sm"
+                aria-label="Decimal point"
+                className="h-13 font-medium text-[15px] rounded-2xl bg-card/60 hover:bg-card border border-border/30 shadow-[0_1px_2px_rgba(0,0,0,0.02)] active:scale-95 transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
               >
                 .
               </Button>
               <Button
                 type="button"
                 onClick={() => handleKeyClick('=')}
-                className="h-12 font-bold text-base rounded-xl col-span-2 bg-primary text-white shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all"
+                aria-label="Calculate equals"
+                className="h-13 font-semibold text-[15px] rounded-2xl col-span-2 bg-foreground text-background shadow-md hover:bg-foreground/90 active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
               >
                 =
               </Button>
@@ -434,38 +451,44 @@ const TransactionForm: React.FC = () => {
                 type="button"
                 variant="ghost"
                 onClick={() => handleKeyClick('DEL')}
-                className="h-12 font-bold text-base rounded-xl bg-card/40 border border-border/5 shadow-sm flex items-center justify-center text-foreground/60"
+                aria-label="Delete last character"
+                className="h-13 font-medium text-[15px] rounded-2xl bg-card/60 hover:bg-card border border-border/30 shadow-[0_1px_2px_rgba(0,0,0,0.02)] flex items-center justify-center text-muted-foreground active:scale-95 transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
               >
-                <HugeiconsIcon icon={Delete02Icon} size={18} />
+                <HugeiconsIcon icon={Delete02Icon} size={18} strokeWidth={2} />
               </Button>
             </div>
           </div>
 
           {/* Note & CTA */}
           <div className="space-y-6">
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-foreground/40 ml-1">
+            <div className="space-y-2.5">
+              <Label
+                htmlFor="note-input"
+                className="text-xs font-medium text-foreground ml-1"
+              >
                 Note (Optional)
               </Label>
               <textarea
+                id="note-input"
+                name="note"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="What was this for?"
-                className="w-full px-5 py-4 bg-secondary/30 border border-transparent rounded-2xl focus:border-primary/20 focus:bg-card outline-none h-20 resize-none font-medium text-xs text-foreground placeholder:text-foreground/20 transition-all shadow-inner"
+                className="w-full px-5 py-4 bg-secondary/30 border border-transparent rounded-[1.25rem] outline-none h-24 resize-none font-medium text-[13px] text-foreground placeholder:text-muted-foreground/60 focus-visible:border-primary/40 focus-visible:ring-4 focus-visible:ring-primary/5 transition-colors shadow-inner"
               />
             </div>
 
             <Button
               type="submit"
               disabled={isListening || isParsing}
-              className="group w-full h-16 rounded-[1.5rem] bg-primary text-white font-black uppercase tracking-[0.3em] text-xs shadow-xl shadow-primary/30 hover:bg-primary/90 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-3"
+              className="group w-full h-15 rounded-2xl bg-primary text-primary-foreground font-semibold text-[15px] shadow-lg shadow-primary/20 hover:bg-primary/95 active:scale-[0.98] transition-all flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
             >
               Save Record
               <HugeiconsIcon
                 icon={Tick01Icon}
-                size={18}
-                strokeWidth={3}
-                className="group-hover:scale-110 transition-transform"
+                size={20}
+                strokeWidth={2.5}
+                className="transition-transform group-hover:scale-110"
               />
             </Button>
           </div>
