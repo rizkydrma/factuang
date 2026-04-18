@@ -7,6 +7,7 @@ import SearchBar from '@/components/SearchBar';
 import PageHeader from '@/components/PageHeader';
 import { cn } from '@/lib/utils';
 import { ICON_MAP, DEFAULT_ICON } from '@/constants/icons';
+import { Typography } from '@/components/ui/Typography';
 
 // --- Constants & Utilities ---
 
@@ -60,21 +61,34 @@ const TransactionRow: React.FC<{
           <HugeiconsIcon icon={icon} size={18} strokeWidth={2.5} />
         </div>
         <div className="min-w-0">
-          <p className="text-[13px] font-bold text-foreground/90 leading-none truncate">
+          <Typography
+            variant="small"
+            weight="bold"
+            className="text-foreground/90 leading-none truncate"
+          >
             {t.category}
-          </p>
+          </Typography>
           {t.note && (
-            <p className="text-[10px] text-foreground/40 font-medium truncate mt-1 max-w-[180px]">
+            <Typography
+              variant="xs"
+              weight="medium"
+              className="text-foreground/40 mt-1 max-w-[180px] truncate"
+            >
               {t.note}
-            </p>
+            </Typography>
           )}
         </div>
       </div>
 
       <div className="flex items-center gap-3 shrink-0">
-        <p className="text-[13px] font-black tracking-tight text-foreground">
+        <Typography
+          variant="small"
+          weight="bold"
+          mono
+          className="text-foreground tracking-tight"
+        >
           {formatCurrency(t.amount)}
-        </p>
+        </Typography>
         <button
           onClick={() => t.id && onDelete(t.id)}
           className="p-1.5 rounded-lg text-foreground/20 hover:text-destructive hover:bg-destructive/10 transition-all active:scale-90"
@@ -145,9 +159,14 @@ const Transactions: React.FC = () => {
             {Object.entries(groupedTransactions).map(([date, items]) => (
               <div key={date} className="space-y-4">
                 <div className="flex items-center gap-4 px-2">
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/30 whitespace-nowrap">
+                  <Typography
+                    variant="xs"
+                    weight="bold"
+                    className="text-foreground/30 whitespace-nowrap tracking-[0.2em]"
+                    as="h3"
+                  >
                     {formatDateHeader(date)}
-                  </h3>
+                  </Typography>
                   <div className="h-px bg-border/40 w-full" />
                 </div>
 
@@ -170,9 +189,9 @@ const Transactions: React.FC = () => {
             <div className="p-10 bg-secondary rounded-full mb-6">
               <HugeiconsIcon icon={Search01Icon} size={56} strokeWidth={1} />
             </div>
-            <p className="text-[11px] font-black uppercase tracking-[0.4em]">
+            <Typography variant="xs" weight="bold" className="tracking-[0.4em]">
               No transactions recorded
-            </p>
+            </Typography>
           </div>
         )}
       </main>

@@ -1,4 +1,5 @@
 import { DEFAULT_ICON, ICON_MAP } from '@/constants/icons';
+import { Typography } from '@/components/ui/Typography';
 import { cn } from '@/lib/utils';
 import { useUIStore } from '@/store/uiStore';
 import { Invoice01Icon, PencilEdit01Icon } from '@hugeicons/core-free-icons';
@@ -63,7 +64,9 @@ const TransactionItem: React.FC<{
       >
         <div className="flex flex-col items-center gap-1">
           <HugeiconsIcon icon={PencilEdit01Icon} size={20} />
-          <span className="text-[12px]">Edit</span>
+          <Typography variant="small" as="span">
+            Edit
+          </Typography>
         </div>
       </motion.div>
 
@@ -94,24 +97,24 @@ const TransactionItem: React.FC<{
           </div>
 
           <div className="min-w-0 flex flex-col justify-center">
-            <p className="text-[14px] font-semibold text-foreground truncate">
+            <Typography variant="p" weight="semibold" className="truncate">
               {t.note || t.category}
-            </p>
+            </Typography>
             <div className="flex items-center gap-1.5 mt-1">
-              <p className="text-[10px] text-muted-foreground/90 font-medium">
+              <Typography variant="xs" muted>
                 {dateTimeString}
-              </p>
+              </Typography>
             </div>
           </div>
         </div>
 
         <div className="flex flex-col justify-center items-end shrink-0">
-          <p className="text-[14px] font-bold text-foreground tabular-nums">
+          <Typography variant="p" weight="bold" mono>
             {isCensored ? 'Rp ******' : formatCurrency(t.amount)}
-          </p>
-          <p className="text-[10px] text-muted-foreground/90 font-medium mt-1 truncate text-right">
+          </Typography>
+          <Typography variant="xs" muted className="mt-1 truncate text-right">
             {t.category}
-          </p>
+          </Typography>
         </div>
       </motion.div>
     </div>
@@ -129,9 +132,14 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
         <div className="p-5 bg-secondary/50 rounded-full text-muted-foreground/60">
           <HugeiconsIcon icon={Invoice01Icon} size={28} />
         </div>
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <Typography
+          variant="xs"
+          weight="semibold"
+          muted
+          className="tracking-wider"
+        >
           Belum ada transaksi
-        </p>
+        </Typography>
       </div>
     );
   }
@@ -141,15 +149,24 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
       {groupedTransactions.map(([dateKey, txs]) => (
         <div key={dateKey} className="space-y-3">
           <div className="flex justify-between items-center px-1">
-            <h3 className="text-[13px] font-semibold text-foreground/90 tracking-wide">
+            <Typography
+              variant="small"
+              weight="semibold"
+              muted
+              className="tracking-wide"
+            >
               {formatGroupDate(dateKey)}
-            </h3>
-            <span className="text-[11px] font-semibold text-foreground/80 px-2.5 py-1 glass-card-sm rounded-lg">
+            </Typography>
+            <Typography
+              variant="xs"
+              weight="semibold"
+              className="px-2.5 py-1 glass-card-sm rounded-lg"
+            >
               {txs.length} Items
-            </span>
+            </Typography>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             {txs.map((t: Transaction) => (
               <TransactionItem
                 key={t.id}

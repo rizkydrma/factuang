@@ -22,8 +22,10 @@ import { AnimatePresence, motion } from 'framer-motion';
 import React, { useEffect, useState } from 'react';
 import { db } from '../db/database';
 import { useUIStore } from '../store/uiStore';
+import { Typography } from '@/components/ui/Typography';
 
 // --- Types for Speech Recognition ---
+// ... (rest of imports and types)
 interface SpeechRecognitionEvent extends Event {
   results: {
     [index: number]: {
@@ -265,12 +267,16 @@ const TransactionForm: React.FC = () => {
               className="absolute inset-0 z-60 bg-background/80 backdrop-blur-2xl flex flex-col items-center justify-center p-8 space-y-10"
             >
               <div className="space-y-3 text-center">
-                <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+                <Typography
+                  variant="h2"
+                  weight="semibold"
+                  className="drop-shadow-sm"
+                >
                   Listening…
-                </h2>
-                <p className="text-[13px] font-medium text-muted-foreground/80">
+                </Typography>
+                <Typography variant="small" weight="medium" muted>
                   Speak the amount and category
-                </p>
+                </Typography>
               </div>
 
               <div className="relative">
@@ -304,14 +310,16 @@ const TransactionForm: React.FC = () => {
 
         <DrawerHeader className="px-8 pt-8 pb-5 flex flex-row items-center justify-between shrink-0">
           <div className="space-y-1">
-            <DrawerTitle className="text-xl font-semibold tracking-tight leading-none text-foreground">
-              {editingTransactionId ? 'Edit Record' : 'New Record'}
+            <DrawerTitle className="text-xl font-semibold tracking-tight leading-none text-foreground as-child">
+              <Typography variant="h3" as="span">
+                {editingTransactionId ? 'Edit Record' : 'New Record'}
+              </Typography>
             </DrawerTitle>
-            <p className="text-xs font-medium text-muted-foreground">
+            <Typography variant="small" weight="medium" muted>
               {editingTransactionId
                 ? 'Update your transaction details'
                 : 'Add a new transaction'}
-            </p>
+            </Typography>
           </div>
           <DrawerClose asChild>
             <button
@@ -329,17 +337,34 @@ const TransactionForm: React.FC = () => {
         >
           {/* Amount Display */}
           <div className="relative group bg-secondary/20 rounded-[2rem] p-7 text-center space-y-2 overflow-hidden border border-border/30 focus-within:border-primary/30 focus-within:ring-4 focus-within:ring-primary/5 transition-colors">
-            <p className="text-xs font-medium tracking-wide text-muted-foreground">
+            <Typography
+              variant="small"
+              weight="medium"
+              muted
+              className="tracking-wide"
+            >
               Spending Amount
-            </p>
+            </Typography>
 
             <div className="flex items-center justify-center gap-2">
-              <span className="text-lg font-semibold text-muted-foreground/60 mt-0.5">
+              <Typography
+                variant="h4"
+                weight="semibold"
+                muted
+                className="mt-0.5"
+                as="span"
+              >
                 Rp
-              </span>
-              <div className="text-[2.75rem] font-bold tracking-tight text-foreground tabular-nums truncate max-w-full leading-none">
+              </Typography>
+              <Typography
+                variant="h1"
+                weight="bold"
+                mono
+                className="truncate max-w-full leading-none"
+                as="div"
+              >
                 {expression || '0'}
-              </div>
+              </Typography>
             </div>
 
             {/* Voice Trigger Small */}

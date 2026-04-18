@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 import { cn } from '@/lib/utils';
+import { Typography } from '@/components/ui/Typography';
 
 interface PageHeaderProps {
   title: string;
@@ -47,13 +48,22 @@ const PageHeader: React.FC<PageHeaderProps> = ({
           {leftAction}
 
           <div className="flex flex-col justify-center">
-            <h1 className="text-xl font-black uppercase tracking-tighter italic leading-none">
+            <Typography
+              variant="h3"
+              weight="bold"
+              className="uppercase tracking-tighter italic leading-none"
+              as="h1"
+            >
               {title}
-            </h1>
+            </Typography>
             {subtitle && (
-              <p className="text-[10px] font-bold opacity-70 uppercase tracking-[0.2em] mt-1.5 leading-none">
+              <Typography
+                variant="xs"
+                weight="bold"
+                className="opacity-70 mt-1.5 leading-none"
+              >
                 {subtitle}
-              </p>
+              </Typography>
             )}
           </div>
         </div>

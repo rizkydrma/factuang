@@ -2,6 +2,7 @@ import React from 'react';
 import { ViewIcon, ViewOffIcon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { formatCurrency } from '../utils';
+import { Typography } from '@/components/ui/Typography';
 
 interface DashboardSummaryProps {
   totalExpense: number;
@@ -17,12 +18,22 @@ export const DashboardSummary: React.FC<DashboardSummaryProps> = ({
   return (
     <div className="relative z-10 flex items-end justify-between w-full pb-2">
       <div className="space-y-1">
-        <p className="text-sm font-medium text-primary-foreground/90">
+        <Typography
+          variant="small"
+          weight="medium"
+          className="text-primary-foreground/90"
+        >
           Total Pengeluaran
-        </p>
-        <p className="text-[2rem] font-bold tracking-tight leading-none drop-shadow-sm tabular-nums">
+        </Typography>
+        <Typography
+          variant="h2"
+          weight="bold"
+          mono
+          as="p"
+          className="leading-none drop-shadow-sm"
+        >
           {isCensored ? 'Rp ******' : formatCurrency(totalExpense)}
-        </p>
+        </Typography>
       </div>
       <button
         onClick={onToggleCensored}

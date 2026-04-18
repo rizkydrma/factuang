@@ -2,6 +2,7 @@ import React from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { cn } from '@/lib/utils';
 import { formatCurrency } from '../utils';
+import { Typography } from '@/components/ui/Typography';
 
 interface CategorySliderProps {
   categorySummaries: Array<{
@@ -42,12 +43,21 @@ export const CategorySlider: React.FC<CategorySliderProps> = ({
                 </div>
               </div>
               <div className="space-y-0.5 mt-2">
-                <p className="text-xs font-semibold text-muted-foreground truncate">
+                <Typography
+                  variant="xs"
+                  weight="semibold"
+                  className="text-gray-200 truncate capitalize"
+                >
                   {cat.name}
-                </p>
-                <p className="text-sm font-bold text-white tabular-nums truncate">
+                </Typography>
+                <Typography
+                  variant="small"
+                  weight="bold"
+                  mono
+                  className="text-white truncate"
+                >
                   {isCensored ? 'Rp ******' : formatCurrency(cat.total)}
-                </p>
+                </Typography>
               </div>
             </div>
           ))}

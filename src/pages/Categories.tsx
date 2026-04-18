@@ -13,6 +13,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { Typography } from '@/components/ui/Typography';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { AnimatePresence, motion } from 'framer-motion';
 import { HugeiconsIcon } from '@hugeicons/react';
@@ -182,12 +183,20 @@ const Categories: React.FC = () => {
                       </div>
 
                       <div className="space-y-0.5">
-                        <p className="font-bold text-[13px] uppercase tracking-tight">
+                        <Typography
+                          variant="small"
+                          weight="bold"
+                          className="uppercase tracking-tight"
+                        >
                           {cat.name}
-                        </p>
-                        <p className="text-[9px] font-bold opacity-30 uppercase tracking-[0.15em]">
+                        </Typography>
+                        <Typography
+                          variant="xs"
+                          weight="bold"
+                          className="opacity-30 tracking-[0.15em]"
+                        >
                           Ref #{cat.id}
-                        </p>
+                        </Typography>
                       </div>
                     </div>
 
@@ -214,9 +223,13 @@ const Categories: React.FC = () => {
             ) : (
               <div className="py-20 flex flex-col items-center justify-center text-center opacity-20">
                 <HugeiconsIcon icon={SparklesIcon} size={32} className="mb-4" />
-                <p className="text-xs font-bold uppercase tracking-widest">
+                <Typography
+                  variant="xs"
+                  weight="bold"
+                  className="tracking-widest"
+                >
                   No matching categories
-                </p>
+                </Typography>
               </div>
             )}
           </AnimatePresence>
@@ -246,12 +259,14 @@ const Categories: React.FC = () => {
             <DialogTitle className="text-xl font-bold uppercase tracking-tight italic text-center">
               Are you sure?
             </DialogTitle>
-            <DialogDescription className="text-xs font-medium opacity-60 text-center px-2 leading-relaxed text-foreground/60">
-              This will permanently delete the category{' '}
-              <span className="font-bold text-foreground">
-                "{categoryToDelete?.name}"
-              </span>{' '}
-              and all its associations.
+            <DialogDescription className="text-xs font-medium opacity-60 text-center px-2 leading-relaxed text-foreground/60 as-child">
+              <Typography variant="small" weight="medium" as="span">
+                This will permanently delete the category{' '}
+                <Typography weight="bold" className="text-foreground" as="span">
+                  "{categoryToDelete?.name}"
+                </Typography>{' '}
+                and all its associations.
+              </Typography>
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-2 pt-4">

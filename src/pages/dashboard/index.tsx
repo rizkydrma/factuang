@@ -29,7 +29,7 @@ const Dashboard: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
       {/* Top Section */}
-      <section className="bg-linear-150 from-primary to-primary/80 px-6 pt-12 pb-2 rounded-b-2xl shadow-sm flex flex-col space-y-8 text-primary-foreground relative overflow-hidden">
+      <section className="bg-linear-150 from-primary to-primary px-6 pt-12 pb-2 rounded-b-2xl shadow-sm flex flex-col space-y-8 text-primary-foreground relative overflow-hidden">
         {/* Decorative Background */}
         <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-white/10 blur-[80px] rounded-full pointer-events-none" />
 

@@ -24,7 +24,7 @@
   --popover-foreground: #0f172a;
 
   /* Accent Blue yang lebih tenang */
-  --primary: #0ea5e9;
+  --primary: #335fb3;
   --primary-foreground: #ffffff;
 
   /* Elemen sekunder (Slate 100) */
@@ -42,7 +42,7 @@
   /* Border halus (Slate 200) */
   --border: #e2e8f0;
   --input: #f1f5f9;
-  --ring: #0ea5e9;
+  --ring: #335fb3;
   --radius: 0.75rem;
 }
 

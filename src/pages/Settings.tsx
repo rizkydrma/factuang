@@ -12,6 +12,7 @@ import {
 } from '@hugeicons/core-free-icons';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/hooks/useTheme';
+import { Typography } from '@/components/ui/Typography';
 import PageHeader from '@/components/PageHeader';
 
 const Settings: React.FC = () => {
@@ -122,9 +123,14 @@ const Settings: React.FC = () => {
       <div className="flex-1 p-6 space-y-8">
         {/* Data Section */}
         <section className="space-y-4">
-          <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-foreground/30 ml-1">
+          <Typography
+            variant="xs"
+            weight="bold"
+            className="text-foreground/30 ml-1 tracking-[0.3em]"
+            as="h3"
+          >
             Data Management
-          </h3>
+          </Typography>
           <Card className="bg-card border-border rounded-2xl overflow-hidden shadow-sm">
             <div className="divide-y divide-border/50">
               <button
@@ -136,12 +142,20 @@ const Settings: React.FC = () => {
                     <HugeiconsIcon icon={Download01Icon} size={20} />
                   </div>
                   <div>
-                    <p className="text-sm font-bold uppercase tracking-tight">
+                    <Typography
+                      variant="small"
+                      weight="bold"
+                      className="uppercase tracking-tight"
+                    >
                       Export to CSV
-                    </p>
-                    <p className="text-[10px] opacity-50 font-medium">
+                    </Typography>
+                    <Typography
+                      variant="xs"
+                      weight="medium"
+                      className="opacity-50"
+                    >
                       Backup your transactions
-                    </p>
+                    </Typography>
                   </div>
                 </div>
               </button>
@@ -152,12 +166,20 @@ const Settings: React.FC = () => {
                     <HugeiconsIcon icon={Upload01Icon} size={20} />
                   </div>
                   <div>
-                    <p className="text-sm font-bold uppercase tracking-tight">
+                    <Typography
+                      variant="small"
+                      weight="bold"
+                      className="uppercase tracking-tight"
+                    >
                       Import from CSV
-                    </p>
-                    <p className="text-[10px] opacity-50 font-medium">
+                    </Typography>
+                    <Typography
+                      variant="xs"
+                      weight="medium"
+                      className="opacity-50"
+                    >
                       Restore from a backup
-                    </p>
+                    </Typography>
                   </div>
                 </div>
                 <input
@@ -170,10 +192,18 @@ const Settings: React.FC = () => {
 
               <button
                 onClick={resetAllData}
-                className="w-full px-6 py-5 flex items-center justify-center bg-destructive/5 hover:bg-destructive text-destructive hover:text-white transition-all font-black uppercase tracking-widest text-[10px]"
+                className="w-full px-6 py-5 flex items-center justify-center bg-destructive/5 hover:bg-destructive text-destructive hover:text-white transition-all focus-visible:ring-2 focus-visible:ring-destructive"
               >
-                <HugeiconsIcon icon={Delete02Icon} size={16} className="mr-2" />
-                Reset & Delete All Data
+                <div className="flex items-center gap-2">
+                  <HugeiconsIcon icon={Delete02Icon} size={16} />
+                  <Typography
+                    variant="xs"
+                    weight="bold"
+                    className="tracking-widest"
+                  >
+                    Reset & Delete All Data
+                  </Typography>
+                </div>
               </button>
             </div>
           </Card>
@@ -181,9 +211,14 @@ const Settings: React.FC = () => {
 
         {/* Appearance Section */}
         <section className="space-y-4">
-          <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-foreground/30 ml-1">
+          <Typography
+            variant="xs"
+            weight="bold"
+            className="text-foreground/30 ml-1 tracking-[0.3em]"
+            as="h3"
+          >
             Appearance
-          </h3>
+          </Typography>
           <Card className="bg-card border-border rounded-2xl overflow-hidden shadow-sm">
             <button
               onClick={toggleTheme}
@@ -197,12 +232,20 @@ const Settings: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <p className="text-sm font-bold uppercase tracking-tight">
+                  <Typography
+                    variant="small"
+                    weight="bold"
+                    className="uppercase tracking-tight"
+                  >
                     Theme Mode
-                  </p>
-                  <p className="text-[10px] opacity-50 font-medium">
+                  </Typography>
+                  <Typography
+                    variant="xs"
+                    weight="medium"
+                    className="opacity-50"
+                  >
                     Switch to {theme === 'light' ? 'Dark' : 'Light'} mode
-                  </p>
+                  </Typography>
                 </div>
               </div>
               <div className="w-12 h-6 bg-secondary rounded-full relative p-1 transition-colors">
@@ -221,25 +264,42 @@ const Settings: React.FC = () => {
 
         {/* About Section */}
         <section className="space-y-4">
-          <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-foreground/30 ml-1">
+          <Typography
+            variant="xs"
+            weight="bold"
+            className="text-foreground/30 ml-1 tracking-[0.3em]"
+            as="h3"
+          >
             About App
-          </h3>
+          </Typography>
           <Card className="bg-card border-border rounded-2xl p-8 shadow-sm flex flex-col items-center text-center space-y-5 text-card-foreground">
             <div className="p-5 rounded-2xl bg-primary/10 text-primary">
               <HugeiconsIcon icon={InformationCircleIcon} size={40} />
             </div>
             <div className="space-y-1">
-              <p className="text-xl font-black uppercase tracking-tighter">
+              <Typography
+                variant="h3"
+                weight="bold"
+                className="uppercase tracking-tighter"
+              >
                 Factuang
-              </p>
-              <p className="text-[10px] font-black text-primary uppercase tracking-[0.4em]">
+              </Typography>
+              <Typography
+                variant="xs"
+                weight="bold"
+                className="text-primary tracking-[0.4em]"
+              >
                 Version 0.0.1
-              </p>
+              </Typography>
             </div>
-            <p className="text-[11px] font-medium px-4 opacity-50 leading-relaxed">
+            <Typography
+              variant="xs"
+              weight="medium"
+              className="px-4 opacity-50 leading-relaxed text-center"
+            >
               A simple and modern way to track your daily expenses. Built with
               React, Dexie, and Hugeicons.
-            </p>
+            </Typography>
           </Card>
         </section>
       </div>
