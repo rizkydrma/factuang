@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useUserStore } from '@/store/userStore';
 
+import { motion, AnimatePresence } from 'framer-motion';
+
 // Components
 import { DashboardHeader } from './components/DashboardHeader';
 import { DashboardSummary } from './components/DashboardSummary';
@@ -39,16 +41,27 @@ const Dashboard: React.FC = () => {
           onChangeMonth={changeMonth}
         />
 
-        <DashboardSummary
-          totalExpense={totalExpense}
-          isCensored={isCensored}
-          onToggleCensored={() => setIsCensored(!isCensored)}
-        />
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={monthYear}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            className="flex flex-col space-y-8"
+          >
+            <DashboardSummary
+              totalExpense={totalExpense}
+              isCensored={isCensored}
+              onToggleCensored={() => setIsCensored(!isCensored)}
+            />
 
-        <CategorySlider
-          categorySummaries={categorySummaries}
-          isCensored={isCensored}
-        />
+            <CategorySlider
+              categorySummaries={categorySummaries}
+              isCensored={isCensored}
+            />
+          </motion.div>
+        </AnimatePresence>
       </section>
 
       <main className="flex-1 pb-32 pt-6 relative overflow-hidden">
@@ -56,11 +69,21 @@ const Dashboard: React.FC = () => {
         <div className="absolute top-1/4 -left-20 w-80 h-80 bg-primary/5 dark:bg-primary/10 blur-[120px] rounded-full pointer-events-none" />
         <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-primary/5 dark:bg-primary/10 blur-[120px] rounded-full pointer-events-none" />
 
-        <TransactionHistory
-          groupedTransactions={groupedTransactions}
-          categoriesMap={categoriesMap}
-          isCensored={isCensored}
-        />
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={monthYear}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
+          >
+            <TransactionHistory
+              groupedTransactions={groupedTransactions}
+              categoriesMap={categoriesMap}
+              isCensored={isCensored}
+            />
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       <NameOnboardingModal isOpen={isNameModalOpen} onSave={setUserName} />
