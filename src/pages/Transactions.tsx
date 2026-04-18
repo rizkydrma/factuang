@@ -5,21 +5,19 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { Delete02Icon, Search01Icon } from '@hugeicons/core-free-icons';
 import SearchBar from '@/components/SearchBar';
 import PageHeader from '@/components/PageHeader';
-import { cn } from '@/lib/utils';
-import { ICON_MAP, DEFAULT_ICON } from '@/constants/icons';
 import { Typography } from '@/components/ui/Typography';
+import TransactionItem from '@/components/TransactionItem';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 // --- Constants & Utilities ---
-
-const formatCurrency = (val: number) => {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0,
-  })
-    .format(val)
-    .replace(',00', '');
-};
 
 const formatDateHeader = (dateStr: string) => {
   const date = new Date(dateStr);
@@ -37,73 +35,18 @@ const formatDateHeader = (dateStr: string) => {
   });
 };
 
-// --- Sub-components ---
-
-const TransactionRow: React.FC<{
-  transaction: Transaction;
-  onDelete: (id: number) => void;
-}> = ({ transaction: t, onDelete }) => {
-  const icon = t.categoryIcon
-    ? ICON_MAP[t.categoryIcon] || DEFAULT_ICON
-    : DEFAULT_ICON;
-  const colorClass = t.categoryColor || 'bg-slate-500';
-
-  return (
-    <div className="group flex items-center justify-between py-3.5 px-4 hover:bg-secondary/20 transition-all duration-200">
-      <div className="flex items-center gap-3.5 min-w-0">
-        <div
-          className={cn(
-            'w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm transition-transform group-active:scale-95',
-            colorClass.replace('bg-', 'bg-') + '/10',
-            colorClass.replace('bg-', 'text-'),
-          )}
-        >
-          <HugeiconsIcon icon={icon} size={18} strokeWidth={2.5} />
-        </div>
-        <div className="min-w-0">
-          <Typography
-            variant="small"
-            weight="bold"
-            className="text-foreground/90 leading-none truncate"
-          >
-            {t.category}
-          </Typography>
-          {t.note && (
-            <Typography
-              variant="xs"
-              weight="medium"
-              className="text-foreground/40 mt-1 max-w-[180px] truncate"
-            >
-              {t.note}
-            </Typography>
-          )}
-        </div>
-      </div>
-
-      <div className="flex items-center gap-3 shrink-0">
-        <Typography
-          variant="small"
-          weight="bold"
-          mono
-          className="text-foreground tracking-tight"
-        >
-          {formatCurrency(t.amount)}
-        </Typography>
-        <button
-          onClick={() => t.id && onDelete(t.id)}
-          className="p-1.5 rounded-lg text-foreground/20 hover:text-destructive hover:bg-destructive/10 transition-all active:scale-90"
-        >
-          <HugeiconsIcon icon={Delete02Icon} size={14} />
-        </button>
-      </div>
-    </div>
-  );
-};
-
 // --- Main Page Component ---
 
 const Transactions: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+
+  const categories = useLiveQuery(() => db.categories.toArray());
+  const categoriesMap = useMemo(() => {
+    const map = new Map();
+    categories?.forEach((c) => map.set(c.name, c));
+    return map;
+  }, [categories]);
 
   const liveTransactions = useLiveQuery(
     () =>
@@ -135,9 +78,10 @@ const Transactions: React.FC = () => {
     );
   }, [transactions]);
 
-  const handleDelete = async (id: number) => {
-    if (confirm('Hapus transaksi ini?')) {
-      await db.transactions.delete(id);
+  const handleDelete = async () => {
+    if (deleteId) {
+      await db.transactions.delete(deleteId);
+      setDeleteId(null);
     }
   };
 
@@ -170,16 +114,16 @@ const Transactions: React.FC = () => {
                   <div className="h-px bg-border/40 w-full" />
                 </div>
 
-                <div className="bg-card/40 rounded-[1.5rem] border border-border/10 overflow-hidden shadow-sm shadow-black/2">
-                  <div className="divide-y divide-border/10">
-                    {items.map((t) => (
-                      <TransactionRow
-                        key={t.id}
-                        transaction={t}
-                        onDelete={handleDelete}
-                      />
-                    ))}
-                  </div>
+                <div className="space-y-2">
+                  {items.map((t) => (
+                    <TransactionItem
+                      key={t.id}
+                      t={t}
+                      categoriesMap={categoriesMap}
+                      isCensored={false}
+                      onDeleteRequest={(id) => setDeleteId(id)}
+                    />
+                  ))}
                 </div>
               </div>
             ))}
@@ -195,6 +139,40 @@ const Transactions: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
+        <DialogContent className="max-w-[340px] rounded-[2rem] p-8 border-none ring-1 ring-black/5 shadow-2xl bg-background/95 backdrop-blur-2xl">
+          <DialogHeader className="space-y-4">
+            <div className="mx-auto w-16 h-16 bg-destructive/10 rounded-2xl flex items-center justify-center text-destructive mb-2">
+              <HugeiconsIcon icon={Delete02Icon} size={32} />
+            </div>
+            <DialogTitle className="text-xl font-bold text-center uppercase tracking-tight italic">
+              Hapus Transaksi?
+            </DialogTitle>
+            <DialogDescription className="text-center text-xs font-medium opacity-60 px-2 leading-relaxed">
+              Tindakan ini tidak dapat dibatalkan. Transaksi akan dihapus secara
+              permanen dari riwayat kamu.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col gap-2 mt-6 sm:flex-col sm:space-x-0">
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              className="w-full h-12 rounded-xl font-bold uppercase tracking-widest text-[10px] shadow-lg shadow-destructive/20"
+            >
+              Hapus Sekarang
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => setDeleteId(null)}
+              className="w-full h-12 rounded-xl font-bold uppercase tracking-widest text-[10px] opacity-40 hover:opacity-100"
+            >
+              Batalkan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
