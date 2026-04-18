@@ -2,12 +2,25 @@ import { DEFAULT_ICON, ICON_MAP } from '@/constants/icons';
 import { Typography } from '@/components/ui/Typography';
 import { cn } from '@/lib/utils';
 import { useUIStore } from '@/store/uiStore';
-import { Invoice01Icon, PencilEdit01Icon } from '@hugeicons/core-free-icons';
+import {
+  Invoice01Icon,
+  PencilEdit01Icon,
+  Delete02Icon,
+} from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
-import React from 'react';
-import { type Category, type Transaction } from '../../../db/database';
+import React, { useState } from 'react';
+import { db, type Category, type Transaction } from '../../../db/database';
 import { formatCurrency, formatGroupDate } from '../utils';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 interface TransactionHistoryProps {
   groupedTransactions: Array<[string, Transaction[]]>;
@@ -19,16 +32,27 @@ const TransactionItem: React.FC<{
   t: Transaction;
   categoriesMap: Map<string, Category>;
   isCensored: boolean;
-}> = ({ t, categoriesMap, isCensored }) => {
+  onDeleteRequest: (id: number) => void;
+}> = ({ t, categoriesMap, isCensored, onDeleteRequest }) => {
   const { openEditModal } = useUIStore();
   const x = useMotionValue(0);
 
+  // Edit (Swipe Right)
   const editOpacity = useTransform(x, [0, 80], [0, 1]);
   const editScale = useTransform(x, [0, 80], [0.8, 1]);
   const editBackground = useTransform(
     x,
     [0, 80],
     ['rgba(254, 240, 138, 0)', 'rgba(254, 240, 138, 1)'], // yellow-200 equivalent
+  );
+
+  // Delete (Swipe Left)
+  const deleteOpacity = useTransform(x, [0, -80], [0, 1]);
+  const deleteScale = useTransform(x, [0, -80], [0.8, 1]);
+  const deleteBackground = useTransform(
+    x,
+    [0, -80],
+    ['rgba(220, 38, 38, 0)', 'rgba(220, 38, 38, 1)'], // red-600 equivalent
   );
 
   const canonical = categoriesMap.get(t.category);
@@ -70,16 +94,37 @@ const TransactionItem: React.FC<{
         </div>
       </motion.div>
 
+      {/* Background Layer (Delete Action) */}
+      <motion.div
+        style={{
+          opacity: deleteOpacity,
+          scale: deleteScale,
+          backgroundColor: deleteBackground,
+        }}
+        className="absolute inset-0 flex items-center justify-end pr-6 text-white font-bold"
+      >
+        <div className="flex flex-col items-center gap-1">
+          <HugeiconsIcon icon={Delete02Icon} size={20} />
+          <Typography variant="small" as="span">
+            Delete
+          </Typography>
+        </div>
+      </motion.div>
+
       {/* Foreground Layer (Card) */}
       <motion.div
         style={{ x }}
         drag="x"
         dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={{ left: 0.05, right: 0.5 }}
-        onDragEnd={(_, { offset }) => {
+        dragElastic={0.5}
+        onDragEnd={async (_, { offset }) => {
           if (offset.x > 80) {
             if (t.id) {
               openEditModal(t.id);
+            }
+          } else if (offset.x < -80) {
+            if (t.id) {
+              onDeleteRequest(t.id);
             }
           }
         }}
@@ -126,6 +171,15 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   categoriesMap,
   isCensored,
 }) => {
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+
+  const handleDelete = async () => {
+    if (deleteId) {
+      await db.transactions.delete(deleteId);
+      setDeleteId(null);
+    }
+  };
+
   if (groupedTransactions.length === 0) {
     return (
       <div className="py-12 text-center flex flex-col items-center justify-center gap-4 opacity-50 mt-4">
@@ -173,11 +227,46 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                 t={t}
                 categoriesMap={categoriesMap}
                 isCensored={isCensored}
+                onDeleteRequest={(id) => setDeleteId(id)}
               />
             ))}
           </div>
         </div>
       ))}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
+        <DialogContent className="max-w-[340px] rounded-[2rem] p-8 border-none ring-1 ring-black/5 shadow-2xl bg-background/95 backdrop-blur-2xl">
+          <DialogHeader className="space-y-4">
+            <div className="mx-auto w-16 h-16 bg-destructive/10 rounded-2xl flex items-center justify-center text-destructive mb-2">
+              <HugeiconsIcon icon={Delete02Icon} size={32} />
+            </div>
+            <DialogTitle className="text-xl font-bold text-center uppercase tracking-tight italic">
+              Hapus Transaksi?
+            </DialogTitle>
+            <DialogDescription className="text-center text-xs font-medium opacity-60 px-2 leading-relaxed">
+              Tindakan ini tidak dapat dibatalkan. Transaksi akan dihapus secara
+              permanen dari riwayat kamu.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col gap-2 mt-6 sm:flex-col sm:space-x-0">
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              className="w-full h-12 rounded-xl font-bold uppercase tracking-widest text-[10px] shadow-lg shadow-destructive/20"
+            >
+              Hapus Sekarang
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => setDeleteId(null)}
+              className="w-full h-12 rounded-xl font-bold uppercase tracking-widest text-[10px] opacity-40 hover:opacity-100"
+            >
+              Batalkan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
