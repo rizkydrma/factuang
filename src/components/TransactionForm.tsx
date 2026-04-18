@@ -19,7 +19,7 @@ import {
 import { HugeiconsIcon } from '@hugeicons/react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { AnimatePresence, motion } from 'framer-motion';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { db } from '../db/database';
 import { useUIStore } from '../store/uiStore';
 
@@ -80,7 +80,7 @@ const VoiceWaveform: React.FC = () => (
 );
 
 const TransactionForm: React.FC = () => {
-  const { isAddModalOpen, closeAddModal } = useUIStore();
+  const { isAddModalOpen, closeAddModal, editingTransactionId } = useUIStore();
   const [expression, setExpression] = useState('');
   const [category, setCategory] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -93,6 +93,28 @@ const TransactionForm: React.FC = () => {
   const categories = useLiveQuery(() => db.categories.toArray()) || [];
   const effectiveCategory =
     category || (categories.length > 0 ? categories[0].name : '');
+
+  // Fetch transaction if editing
+  useEffect(() => {
+    async function fetchTransaction() {
+      if (editingTransactionId) {
+        const tx = await db.transactions.get(editingTransactionId);
+        if (tx) {
+          setExpression(tx.amount.toString());
+          setCategory(tx.category);
+          setDate(tx.date);
+          setNote(tx.note || '');
+        }
+      } else {
+        // Reset form for new record
+        setExpression('');
+        setCategory('');
+        setDate(new Date().toISOString().split('T')[0]);
+        setNote('');
+      }
+    }
+    fetchTransaction();
+  }, [editingTransactionId, isAddModalOpen]);
 
   const calculateResult = (expr: string): string => {
     try {
@@ -206,15 +228,21 @@ const TransactionForm: React.FC = () => {
 
     const selectedCat = categories.find((c) => c.name === effectiveCategory);
 
-    await db.transactions.add({
-      type: 'expense',
+    const txData = {
+      type: 'expense' as const,
       amount: Number(finalAmount),
       category: effectiveCategory || 'Other',
       categoryIcon: selectedCat?.icon,
       categoryColor: selectedCat?.color,
       date,
       note,
-    });
+    };
+
+    if (editingTransactionId) {
+      await db.transactions.update(editingTransactionId, txData);
+    } else {
+      await db.transactions.add(txData);
+    }
 
     setExpression('');
     setNote('');
@@ -277,16 +305,18 @@ const TransactionForm: React.FC = () => {
         <DrawerHeader className="px-8 pt-8 pb-5 flex flex-row items-center justify-between shrink-0">
           <div className="space-y-1">
             <DrawerTitle className="text-xl font-semibold tracking-tight leading-none text-foreground">
-              New Record
+              {editingTransactionId ? 'Edit Record' : 'New Record'}
             </DrawerTitle>
             <p className="text-xs font-medium text-muted-foreground">
-              Add a new transaction
+              {editingTransactionId
+                ? 'Update your transaction details'
+                : 'Add a new transaction'}
             </p>
           </div>
           <DrawerClose asChild>
             <button
               className="p-2.5 bg-secondary/50 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              aria-label="Close add record modal"
+              aria-label="Close modal"
             >
               <HugeiconsIcon icon={Cancel01Icon} size={18} strokeWidth={2.5} />
             </button>
@@ -483,7 +513,7 @@ const TransactionForm: React.FC = () => {
               disabled={isListening || isParsing}
               className="group w-full h-15 rounded-2xl bg-primary text-primary-foreground font-semibold text-[15px] shadow-lg shadow-primary/20 hover:bg-primary/95 active:scale-[0.98] transition-all flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
             >
-              Save Record
+              {editingTransactionId ? 'Update Record' : 'Save Record'}
               <HugeiconsIcon
                 icon={Tick01Icon}
                 size={20}

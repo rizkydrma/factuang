@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { useUserStore } from '@/store/userStore';
 
 // Components
-import { DashboardHeader } from './dashboard/components/DashboardHeader';
-import { DashboardSummary } from './dashboard/components/DashboardSummary';
-import { CategorySlider } from './dashboard/components/CategorySlider';
-import { TransactionHistory } from './dashboard/components/TransactionHistory';
-import { NameOnboardingModal } from './dashboard/components/NameOnboardingModal';
+import { DashboardHeader } from './components/DashboardHeader';
+import { DashboardSummary } from './components/DashboardSummary';
+import { CategorySlider } from './components/CategorySlider';
+import TransactionHistory from './components/TransactionHistory';
+import { NameOnboardingModal } from './components/NameOnboardingModal';
 
 // Hooks
-import { useDashboardData } from './dashboard/hooks/useDashboardData';
+import { useDashboardData } from './hooks/useDashboardData';
 
 const Dashboard: React.FC = () => {
   const [isCensored, setIsCensored] = useState(false);
