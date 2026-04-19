@@ -15,10 +15,17 @@ export const useDashboardData = () => {
       db.transactions
         .filter((t) => {
           const tDate = new Date(t.date);
-          return (
-            tDate.getMonth() === currentDate.getMonth() &&
-            tDate.getFullYear() === currentDate.getFullYear()
+          const monthStart = new Date(
+            currentDate.getFullYear(),
+            currentDate.getMonth() - 1,
+            1,
           );
+          const monthEnd = new Date(
+            currentDate.getFullYear(),
+            currentDate.getMonth() + 2,
+            0,
+          );
+          return tDate >= monthStart && tDate <= monthEnd;
         })
         .toArray(),
     [currentDate],

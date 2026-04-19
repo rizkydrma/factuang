@@ -54,7 +54,7 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   }
 
   return (
-    <div className="space-y-6 px-6">
+    <div className="space-y-6">
       {groupedTransactions.map(([dateKey, txs]) => (
         <div key={dateKey} className="space-y-3">
           <div className="flex justify-between items-center px-1">

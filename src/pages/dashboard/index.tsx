@@ -8,7 +8,9 @@ import { DashboardHeader } from './components/DashboardHeader';
 import { DashboardSummary } from './components/DashboardSummary';
 import { CategorySlider } from './components/CategorySlider';
 import TransactionHistory from './components/TransactionHistory';
+import { ReportView } from './components/ReportView';
 import { NameOnboardingModal } from './components/NameOnboardingModal';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 // Hooks
 import { useDashboardData } from './hooks/useDashboardData';
@@ -18,7 +20,9 @@ const Dashboard: React.FC = () => {
   const { userName, setUserName } = useUserStore();
 
   const {
+    currentDate,
     monthYear,
+    transactions,
     totalExpense,
     categorySummaries,
     groupedTransactions,
@@ -65,25 +69,58 @@ const Dashboard: React.FC = () => {
       </section>
 
       <main className="flex-1 pb-32 pt-6 relative overflow-hidden">
-        {/* Decorative background elements */}
-        <div className="absolute top-1/4 -left-20 w-80 h-80 bg-primary/5 dark:bg-primary/10 blur-[120px] rounded-full pointer-events-none" />
-        <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-primary/5 dark:bg-primary/10 blur-[120px] rounded-full pointer-events-none" />
+        <Tabs defaultValue="recent" className="px-6">
+          <TabsList className="w-full mb-6 p-1.5 bg-muted/40 backdrop-blur-md rounded-md border border-border/50">
+            <TabsTrigger
+              value="recent"
+              className="flex-1 gap-2 py-3.5 rounded-md transition-all duration-300 data-active:bg-primary data-active:text-primary-foreground data-active:shadow-lg data-active:shadow-primary/30"
+            >
+              <span className="font-semibold">Transaksi Terbaru</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="report"
+              className="flex-1 gap-2 py-3.5 rounded-md transition-all duration-300 data-active:bg-primary data-active:text-primary-foreground data-active:shadow-lg data-active:shadow-primary/30"
+            >
+              <span className="font-semibold">Laporan</span>
+            </TabsTrigger>
+          </TabsList>
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={monthYear}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.4, ease: 'easeOut' }}
-          >
-            <TransactionHistory
-              groupedTransactions={groupedTransactions}
-              categoriesMap={categoriesMap}
-              isCensored={isCensored}
-            />
-          </motion.div>
-        </AnimatePresence>
+          <TabsContent value="recent" className="outline-none">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={monthYear}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.4, ease: 'easeOut' }}
+              >
+                <TransactionHistory
+                  groupedTransactions={groupedTransactions}
+                  categoriesMap={categoriesMap}
+                  isCensored={isCensored}
+                />
+              </motion.div>
+            </AnimatePresence>
+          </TabsContent>
+
+          <TabsContent value="report" className="outline-none">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`${monthYear}-report`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.4, ease: 'easeOut' }}
+              >
+                <ReportView
+                  transactions={transactions}
+                  currentDate={currentDate}
+                  categoriesMap={categoriesMap}
+                />
+              </motion.div>
+            </AnimatePresence>
+          </TabsContent>
+        </Tabs>
       </main>
 
       <NameOnboardingModal isOpen={isNameModalOpen} onSave={setUserName} />
