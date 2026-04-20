@@ -3,11 +3,12 @@ import {
   Drawer,
   DrawerClose,
   DrawerContent,
+  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
 import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import {
   ArrowDown01Icon,
   Cancel01Icon,
@@ -251,12 +252,19 @@ const TransactionForm: React.FC = () => {
     closeAddModal();
   };
 
+  const formattedExpression = (() => {
+    if (!expression) return '0';
+    if (!/^\d+$/.test(expression)) return expression;
+
+    return formatCurrency(Number(expression), { withSymbol: false });
+  })();
+
   return (
     <Drawer
       open={isAddModalOpen}
       onOpenChange={(open) => !open && closeAddModal()}
     >
-      <DrawerContent className="bg-background max-w-md mx-auto rounded-t-[2.5rem] border-none shadow-[0_-8px_40px_rgba(0,0,0,0.12)] flex flex-col overflow-hidden max-h-[96vh] transition-transform duration-500 ring-1 ring-border/5">
+      <DrawerContent className="bg-background max-w-md mx-auto rounded-t-[2.5rem] border-none shadow-[0_-8px_40px_rgba(0,0,0,0.12)] flex flex-col overflow-hidden h-[94vh] max-h-[94vh] transition-transform duration-500 ring-1 ring-border/5">
         {/* Immersive Voice Overlay (Glassmorphism) */}
         <AnimatePresence>
           {isListening && (
@@ -308,22 +316,20 @@ const TransactionForm: React.FC = () => {
           )}
         </AnimatePresence>
 
-        <DrawerHeader className="px-8 pt-8 pb-5 flex flex-row items-center justify-between shrink-0">
-          <div className="space-y-1">
-            <DrawerTitle className="text-xl font-semibold tracking-tight leading-none text-foreground as-child">
-              <Typography variant="h3" as="span">
-                {editingTransactionId ? 'Edit Record' : 'New Record'}
-              </Typography>
+        <DrawerHeader className="px-6 pt-4 pb-2.5 flex flex-row items-start justify-between gap-3 shrink-0 text-left">
+          <div className="flex-1 min-w-0 space-y-0.5 text-left">
+            <DrawerTitle className="text-[1.6rem] font-semibold tracking-tight leading-[1.1] text-foreground">
+              {editingTransactionId ? 'Edit Record' : 'New Record'}
             </DrawerTitle>
-            <Typography variant="small" weight="medium" muted>
+            <DrawerDescription className="text-[0.95rem] leading-tight font-medium text-muted-foreground">
               {editingTransactionId
                 ? 'Update your transaction details'
                 : 'Add a new transaction'}
-            </Typography>
+            </DrawerDescription>
           </div>
           <DrawerClose asChild>
             <button
-              className="p-2.5 bg-secondary/50 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="mt-0.5 p-2.5 bg-secondary/50 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               aria-label="Close modal"
             >
               <HugeiconsIcon icon={Cancel01Icon} size={18} strokeWidth={2.5} />
@@ -331,192 +337,192 @@ const TransactionForm: React.FC = () => {
           </DrawerClose>
         </DrawerHeader>
 
-        <form
-          onSubmit={handleSubmit}
-          className="flex-1 overflow-y-auto px-8 py-2 space-y-7 pb-10 scrollbar-hide"
-        >
-          {/* Amount Display */}
-          <div className="relative group bg-secondary/20 rounded-[2rem] p-7 text-center space-y-2 overflow-hidden border border-border/30 focus-within:border-primary/30 focus-within:ring-4 focus-within:ring-primary/5 transition-colors">
-            <Typography
-              variant="small"
-              weight="medium"
-              muted
-              className="tracking-wide"
-            >
-              Spending Amount
-            </Typography>
-
-            <div className="flex items-center justify-center gap-2">
+        <form onSubmit={handleSubmit} className="flex-1 min-h-0 flex flex-col">
+          <div className="flex-1 min-h-0 overflow-y-auto px-6 py-2 space-y-4 scrollbar-hide">
+            {/* Amount Display */}
+            <div className="relative group bg-secondary/20 rounded-[1.5rem] p-5 text-center space-y-2 overflow-hidden border border-border/30 focus-within:border-primary/30 focus-within:ring-4 focus-within:ring-primary/5 transition-colors">
               <Typography
-                variant="h4"
-                weight="semibold"
+                variant="small"
+                weight="medium"
                 muted
-                className="mt-0.5"
-                as="span"
+                className="tracking-wide"
               >
-                Rp
+                Spending Amount
               </Typography>
-              <Typography
-                variant="h1"
-                weight="bold"
-                mono
-                className="truncate max-w-full leading-none"
-                as="div"
-              >
-                {expression || '0'}
-              </Typography>
-            </div>
 
-            {/* Voice Trigger Small */}
-            <div className="pt-3">
-              <button
-                type="button"
-                onClick={startListening}
-                className={cn(
-                  'inline-flex items-center gap-2 px-5 py-2 rounded-full transition-colors font-medium text-xs shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-                  isParsing
-                    ? 'bg-amber-100 text-amber-700'
-                    : 'bg-primary/10 text-primary hover:bg-primary/15 active:bg-primary/20',
-                )}
-                aria-label="Quick voice input"
-              >
-                {isParsing ? (
-                  <>
-                    <HugeiconsIcon
-                      icon={Loading03Icon}
-                      size={14}
-                      className="animate-spin"
-                    />
-                    Parsing…
-                  </>
-                ) : (
-                  <>
-                    <HugeiconsIcon icon={Mic01Icon} size={14} />
-                    Quick Voice
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Form Grid */}
-          <div className="grid grid-cols-2 gap-5">
-            <div className="space-y-2.5">
-              <Label
-                htmlFor="category-select"
-                className="text-xs font-medium text-foreground ml-1"
-              >
-                Category
-              </Label>
-              <div className="relative">
-                <select
-                  id="category-select"
-                  name="category"
-                  value={effectiveCategory}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="w-full h-12 bg-secondary/40 border border-transparent rounded-[1.25rem] font-medium text-[13px] px-4 appearance-none outline-none focus-visible:border-primary/40 focus-visible:ring-4 focus-visible:ring-primary/5 transition-colors text-foreground"
+              <div className="flex items-center justify-center gap-2">
+                <Typography
+                  variant="h4"
+                  weight="semibold"
+                  muted
+                  className="mt-0.5"
+                  as="span"
                 >
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.name}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </select>
-                <HugeiconsIcon
-                  icon={ArrowDown01Icon}
-                  size={14}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
+                  Rp
+                </Typography>
+                <Typography
+                  variant="h1"
+                  weight="bold"
+                  mono
+                  className="truncate max-w-full leading-none"
+                  as="div"
+                >
+                  {formattedExpression}
+                </Typography>
+              </div>
+
+              {/* Voice Trigger Small */}
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={startListening}
+                  className={cn(
+                    'inline-flex items-center gap-2 px-4 py-1.5 rounded-full transition-colors font-medium text-xs shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+                    isParsing
+                      ? 'bg-amber-100 text-amber-700'
+                      : 'bg-primary/10 text-primary hover:bg-primary/15 active:bg-primary/20',
+                  )}
+                  aria-label="Quick voice input"
+                >
+                  {isParsing ? (
+                    <>
+                      <HugeiconsIcon
+                        icon={Loading03Icon}
+                        size={14}
+                        className="animate-spin"
+                      />
+                      Parsing…
+                    </>
+                  ) : (
+                    <>
+                      <HugeiconsIcon icon={Mic01Icon} size={14} />
+                      Quick Voice
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Form Grid */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label
+                  htmlFor="category-select"
+                  className="text-xs font-medium text-foreground ml-1"
+                >
+                  Category
+                </Label>
+                <div className="relative">
+                  <select
+                    id="category-select"
+                    name="category"
+                    value={effectiveCategory}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="w-full h-11 bg-secondary/40 border border-transparent rounded-[1rem] font-medium text-[13px] px-4 appearance-none outline-none focus-visible:border-primary/40 focus-visible:ring-4 focus-visible:ring-primary/5 transition-colors text-foreground"
+                  >
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.name}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                  <HugeiconsIcon
+                    icon={ArrowDown01Icon}
+                    size={14}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label
+                  htmlFor="date-input"
+                  className="text-xs font-medium text-foreground ml-1"
+                >
+                  Date
+                </Label>
+                <input
+                  id="date-input"
+                  name="date"
+                  type="date"
+                  required
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="w-full h-11 bg-secondary/40 border border-transparent rounded-[1rem] font-medium text-[13px] px-4 outline-none focus-visible:border-primary/40 focus-visible:ring-4 focus-visible:ring-primary/5 transition-colors text-foreground tabular-nums hover:cursor-pointer"
                 />
               </div>
             </div>
-            <div className="space-y-2.5">
-              <Label
-                htmlFor="date-input"
-                className="text-xs font-medium text-foreground ml-1"
-              >
-                Date
-              </Label>
-              <input
-                id="date-input"
-                name="date"
-                type="date"
-                required
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full h-12 bg-secondary/40 border border-transparent rounded-[1.25rem] font-medium text-[13px] px-4 outline-none focus-visible:border-primary/40 focus-visible:ring-4 focus-visible:ring-primary/5 transition-colors text-foreground tabular-nums hover:cursor-pointer"
-              />
-            </div>
-          </div>
 
-          {/* Calculator Keypad - Clean styling */}
-          <div className="bg-secondary/10 p-1.5 rounded-[1.75rem] border border-border/40">
-            <div className="grid grid-cols-4 gap-1.5">
-              {[
-                '7',
-                '8',
-                '9',
-                '/',
-                '4',
-                '5',
-                '6',
-                '*',
-                '1',
-                '2',
-                '3',
-                '-',
-                'C',
-                '0',
-                '000',
-                '+',
-              ].map((k) => (
+            {/* Calculator Keypad - Compact */}
+            <div className="bg-secondary/10 p-1.5 rounded-[1.25rem] border border-border/40">
+              <div className="grid grid-cols-4 gap-1.5">
+                {[
+                  '7',
+                  '8',
+                  '9',
+                  '/',
+                  '4',
+                  '5',
+                  '6',
+                  '*',
+                  '1',
+                  '2',
+                  '3',
+                  '-',
+                  'C',
+                  '0',
+                  '000',
+                  '+',
+                ].map((k) => (
+                  <Button
+                    key={k}
+                    type="button"
+                    variant="ghost"
+                    onClick={() => handleKeyClick(k)}
+                    aria-label={k === 'C' ? 'Clear' : k}
+                    className={cn(
+                      'h-11 font-medium text-[14px] rounded-xl transition-colors active:scale-95 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary',
+                      k === 'C'
+                        ? 'text-destructive hover:bg-destructive/10'
+                        : 'bg-card/60 hover:bg-card border border-border/30 shadow-[0_1px_2px_rgba(0,0,0,0.02)]',
+                    )}
+                  >
+                    {k}
+                  </Button>
+                ))}
                 <Button
-                  key={k}
                   type="button"
                   variant="ghost"
-                  onClick={() => handleKeyClick(k)}
-                  aria-label={k === 'C' ? 'Clear' : k}
-                  className={cn(
-                    'h-13 font-medium text-[15px] rounded-2xl transition-colors active:scale-95 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary',
-                    k === 'C'
-                      ? 'text-destructive hover:bg-destructive/10'
-                      : 'bg-card/60 hover:bg-card border border-border/30 shadow-[0_1px_2px_rgba(0,0,0,0.02)]',
-                  )}
+                  onClick={() => handleKeyClick('.')}
+                  aria-label="Decimal point"
+                  className="h-11 font-medium text-[14px] rounded-xl bg-card/60 hover:bg-card border border-border/30 shadow-[0_1px_2px_rgba(0,0,0,0.02)] active:scale-95 transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
                 >
-                  {k}
+                  .
                 </Button>
-              ))}
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => handleKeyClick('.')}
-                aria-label="Decimal point"
-                className="h-13 font-medium text-[15px] rounded-2xl bg-card/60 hover:bg-card border border-border/30 shadow-[0_1px_2px_rgba(0,0,0,0.02)] active:scale-95 transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
-              >
-                .
-              </Button>
-              <Button
-                type="button"
-                onClick={() => handleKeyClick('=')}
-                aria-label="Calculate equals"
-                className="h-13 font-semibold text-[15px] rounded-2xl col-span-2 bg-foreground text-background shadow-md hover:bg-foreground/90 active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
-              >
-                =
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => handleKeyClick('DEL')}
-                aria-label="Delete last character"
-                className="h-13 font-medium text-[15px] rounded-2xl bg-card/60 hover:bg-card border border-border/30 shadow-[0_1px_2px_rgba(0,0,0,0.02)] flex items-center justify-center text-muted-foreground active:scale-95 transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
-              >
-                <HugeiconsIcon icon={Delete02Icon} size={18} strokeWidth={2} />
-              </Button>
+                <Button
+                  type="button"
+                  onClick={() => handleKeyClick('=')}
+                  aria-label="Calculate equals"
+                  className="h-11 font-semibold text-[14px] rounded-xl col-span-2 bg-foreground text-background shadow-md hover:bg-foreground/90 active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
+                >
+                  =
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => handleKeyClick('DEL')}
+                  aria-label="Delete last character"
+                  className="h-11 font-medium text-[14px] rounded-xl bg-card/60 hover:bg-card border border-border/30 shadow-[0_1px_2px_rgba(0,0,0,0.02)] flex items-center justify-center text-muted-foreground active:scale-95 transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
+                >
+                  <HugeiconsIcon
+                    icon={Delete02Icon}
+                    size={18}
+                    strokeWidth={2}
+                  />
+                </Button>
+              </div>
             </div>
-          </div>
 
-          {/* Note & CTA */}
-          <div className="space-y-6">
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               <Label
                 htmlFor="note-input"
                 className="text-xs font-medium text-foreground ml-1"
@@ -529,14 +535,16 @@ const TransactionForm: React.FC = () => {
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="What was this for?"
-                className="w-full px-5 py-4 bg-secondary/30 border border-transparent rounded-[1.25rem] outline-none h-24 resize-none font-medium text-[13px] text-foreground placeholder:text-muted-foreground/60 focus-visible:border-primary/40 focus-visible:ring-4 focus-visible:ring-primary/5 transition-colors shadow-inner"
+                className="w-full px-4 py-3 bg-secondary/30 border border-transparent rounded-[1rem] outline-none h-20 resize-none font-medium text-[13px] text-foreground placeholder:text-muted-foreground/60 focus-visible:border-primary/40 focus-visible:ring-4 focus-visible:ring-primary/5 transition-colors shadow-inner"
               />
             </div>
+          </div>
 
+          <div className="shrink-0 px-6 pb-5 pt-3 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-t border-border/40">
             <Button
               type="submit"
               disabled={isListening || isParsing}
-              className="group w-full h-15 rounded-2xl bg-primary text-primary-foreground font-semibold text-[15px] shadow-lg shadow-primary/20 hover:bg-primary/95 active:scale-[0.98] transition-all flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
+              className="group w-full h-12 rounded-xl bg-primary text-primary-foreground font-semibold text-[14px] shadow-lg shadow-primary/20 hover:bg-primary/95 active:scale-[0.98] transition-all flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
             >
               {editingTransactionId ? 'Update Record' : 'Save Record'}
               <HugeiconsIcon
