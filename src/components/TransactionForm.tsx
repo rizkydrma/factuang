@@ -24,6 +24,7 @@ import React, { useEffect, useState } from 'react';
 import { db } from '../db/database';
 import { useUIStore } from '../store/uiStore';
 import { Typography } from '@/components/ui/Typography';
+import { DEFAULT_ICON, ICON_MAP } from '@/constants/icons';
 
 // --- Types for Speech Recognition ---
 // ... (rest of imports and types)
@@ -259,12 +260,53 @@ const TransactionForm: React.FC = () => {
     return formatCurrency(Number(expression), { withSymbol: false });
   })();
 
+  const formattedDate = new Date(date).toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+
+  const quickCategories = categories.slice(0, 6);
+
+  const softCategoryColorMap: Record<string, string> = {
+    'bg-rose-500': 'bg-rose-100 text-rose-500',
+    'bg-indigo-500': 'bg-indigo-100 text-indigo-500',
+    'bg-amber-500': 'bg-amber-100 text-amber-600',
+    'bg-emerald-500': 'bg-emerald-100 text-emerald-600',
+    'bg-purple-500': 'bg-purple-100 text-purple-500',
+    'bg-rose-400': 'bg-rose-100 text-rose-500',
+    'bg-cyan-500': 'bg-cyan-100 text-cyan-600',
+    'bg-pink-500': 'bg-pink-100 text-pink-500',
+    'bg-slate-500': 'bg-slate-200 text-slate-600',
+  };
+
+  const keypadKeys = [
+    { label: 'AC', value: 'C', tone: 'danger' as const },
+    { label: '×', value: '*', tone: 'default' as const },
+    { label: '÷', value: '/', tone: 'default' as const },
+    { label: '', value: 'DEL', tone: 'default' as const, isDelete: true },
+    { label: '7', value: '7', tone: 'default' as const },
+    { label: '8', value: '8', tone: 'default' as const },
+    { label: '9', value: '9', tone: 'default' as const },
+    { label: '-', value: '-', tone: 'default' as const },
+    { label: '4', value: '4', tone: 'default' as const },
+    { label: '5', value: '5', tone: 'default' as const },
+    { label: '6', value: '6', tone: 'default' as const },
+    { label: '+', value: '+', tone: 'default' as const },
+    { label: '1', value: '1', tone: 'default' as const },
+    { label: '2', value: '2', tone: 'default' as const },
+    { label: '3', value: '3', tone: 'default' as const },
+    { label: '0', value: '0', tone: 'default' as const },
+    { label: '000', value: '000', tone: 'default' as const },
+    { label: '.', value: '.', tone: 'default' as const },
+  ];
+
   return (
     <Drawer
       open={isAddModalOpen}
       onOpenChange={(open) => !open && closeAddModal()}
     >
-      <DrawerContent className="bg-background max-w-md mx-auto rounded-t-[2.5rem] border-none shadow-[0_-8px_40px_rgba(0,0,0,0.12)] flex flex-col overflow-hidden h-[94vh] max-h-[94vh] transition-transform duration-500 ring-1 ring-border/5">
+      <DrawerContent className="bg-background max-w-md mx-auto rounded-t-[2.5rem] border-none shadow-[0_-8px_40px_rgba(0,0,0,0.12)] flex flex-col overflow-hidden max-h-[calc(100vh-1rem)] transition-transform duration-500 ring-1 ring-border/5">
         {/* Immersive Voice Overlay (Glassmorphism) */}
         <AnimatePresence>
           {isListening && (
@@ -316,130 +358,163 @@ const TransactionForm: React.FC = () => {
           )}
         </AnimatePresence>
 
-        <DrawerHeader className="px-6 pt-4 pb-2.5 flex flex-row items-start justify-between gap-3 shrink-0 text-left">
+        <DrawerHeader className="px-5 pt-3 pb-2 flex flex-row items-start justify-between gap-3 shrink-0 text-left">
           <div className="flex-1 min-w-0 space-y-0.5 text-left">
-            <DrawerTitle className="text-[1.6rem] font-semibold tracking-tight leading-[1.1] text-foreground">
+            <DrawerTitle className="text-[1.5rem] font-semibold tracking-tight leading-[1.1] text-foreground">
               {editingTransactionId ? 'Edit Record' : 'New Record'}
             </DrawerTitle>
-            <DrawerDescription className="text-[0.95rem] leading-tight font-medium text-muted-foreground">
+            <DrawerDescription className="text-[0.84rem] leading-tight font-medium text-muted-foreground">
               {editingTransactionId
                 ? 'Update your transaction details'
                 : 'Add a new transaction'}
             </DrawerDescription>
           </div>
-          <DrawerClose asChild>
+          <div className="mt-0.5 flex items-center gap-2">
             <button
-              className="mt-0.5 p-2.5 bg-secondary/50 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              aria-label="Close modal"
+              type="button"
+              onClick={startListening}
+              className={cn(
+                'h-10 w-10 rounded-full border border-border/50 bg-primary text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+                isParsing && 'text-amber-700 bg-amber-100 border-amber-200',
+              )}
+              aria-label="Voice input"
             >
-              <HugeiconsIcon icon={Cancel01Icon} size={18} strokeWidth={2.5} />
+              {isParsing ? (
+                <HugeiconsIcon
+                  icon={Loading03Icon}
+                  size={17}
+                  className="mx-auto animate-spin motion-reduce:animate-none"
+                />
+              ) : (
+                <HugeiconsIcon icon={Mic01Icon} size={17} className="mx-auto" />
+              )}
             </button>
-          </DrawerClose>
+            <DrawerClose asChild>
+              <button
+                className="p-2.5 bg-secondary/50 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                aria-label="Close modal"
+              >
+                <HugeiconsIcon
+                  icon={Cancel01Icon}
+                  size={18}
+                  strokeWidth={2.5}
+                />
+              </button>
+            </DrawerClose>
+          </div>
         </DrawerHeader>
 
         <form onSubmit={handleSubmit} className="flex-1 min-h-0 flex flex-col">
-          <div className="flex-1 min-h-0 overflow-y-auto px-6 py-2 space-y-4 scrollbar-hide">
-            {/* Amount Display */}
-            <div className="relative group bg-secondary/20 rounded-[1.5rem] p-5 text-center space-y-2 overflow-hidden border border-border/30 focus-within:border-primary/30 focus-within:ring-4 focus-within:ring-primary/5 transition-colors">
-              <Typography
-                variant="small"
-                weight="medium"
-                muted
-                className="tracking-wide"
-              >
-                Spending Amount
-              </Typography>
-
-              <div className="flex items-center justify-center gap-2">
-                <Typography
-                  variant="h4"
-                  weight="semibold"
-                  muted
-                  className="mt-0.5"
-                  as="span"
-                >
+          <div className="flex-1 min-h-0 overflow-y-auto px-5 py-1 space-y-3 scrollbar-hide">
+            <div className="pt-1 pb-1 text-center">
+              <div className="flex items-baseline justify-center gap-2">
+                <Typography variant="h4" weight="semibold" muted as="span">
                   Rp
                 </Typography>
                 <Typography
                   variant="h1"
                   weight="bold"
                   mono
-                  className="truncate max-w-full leading-none"
+                  className="truncate max-w-full leading-none text-2xl"
                   as="div"
                 >
                   {formattedExpression}
                 </Typography>
               </div>
-
-              {/* Voice Trigger Small */}
-              <div className="pt-2">
-                <button
-                  type="button"
-                  onClick={startListening}
-                  className={cn(
-                    'inline-flex items-center gap-2 px-4 py-1.5 rounded-full transition-colors font-medium text-xs shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-                    isParsing
-                      ? 'bg-amber-100 text-amber-700'
-                      : 'bg-primary/10 text-primary hover:bg-primary/15 active:bg-primary/20',
-                  )}
-                  aria-label="Quick voice input"
-                >
-                  {isParsing ? (
-                    <>
-                      <HugeiconsIcon
-                        icon={Loading03Icon}
-                        size={14}
-                        className="animate-spin"
-                      />
-                      Parsing…
-                    </>
-                  ) : (
-                    <>
-                      <HugeiconsIcon icon={Mic01Icon} size={14} />
-                      Quick Voice
-                    </>
-                  )}
-                </button>
-              </div>
             </div>
 
-            {/* Form Grid */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label
-                  htmlFor="category-select"
-                  className="text-xs font-medium text-foreground ml-1"
+            <div className="flex items-center gap-2.5">
+              <div className="relative shrink-0">
+                <select
+                  id="category-select"
+                  name="category"
+                  value={effectiveCategory}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="h-12 min-h-[44px] rounded-full bg-slate-100/90 px-5 pr-11 text-[1.05rem] font-medium text-slate-800 appearance-none outline-none border border-slate-200 shadow-[0_1px_0_rgba(255,255,255,0.7)_inset] focus-visible:border-primary/40 focus-visible:ring-2 focus-visible:ring-primary/20"
                 >
-                  Category
-                </Label>
-                <div className="relative">
-                  <select
-                    id="category-select"
-                    name="category"
-                    value={effectiveCategory}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full h-11 bg-secondary/40 border border-transparent rounded-[1rem] font-medium text-[13px] px-4 appearance-none outline-none focus-visible:border-primary/40 focus-visible:ring-4 focus-visible:ring-primary/5 transition-colors text-foreground"
-                  >
-                    {categories.map((cat) => (
+                  {categories.length === 0 ? (
+                    <option value="">Pilih Kategori</option>
+                  ) : (
+                    categories.map((cat) => (
                       <option key={cat.id} value={cat.name}>
                         {cat.name}
                       </option>
-                    ))}
-                  </select>
-                  <HugeiconsIcon
-                    icon={ArrowDown01Icon}
-                    size={14}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
-                  />
+                    ))
+                  )}
+                </select>
+                <HugeiconsIcon
+                  icon={ArrowDown01Icon}
+                  size={18}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
+                />
+              </div>
+
+              <div className="flex-1 min-w-0 overflow-x-auto scrollbar-hide">
+                <div className="flex items-center gap-2.5 pr-2">
+                  {quickCategories.map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setCategory(cat.name)}
+                      className={cn(
+                        'h-12 w-12 min-h-[44px] min-w-[44px] rounded-full transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 motion-reduce:transition-none',
+                        effectiveCategory === cat.name
+                          ? cn(
+                              cat.color || 'bg-slate-600',
+                              'text-white ring-2 ring-white/80 shadow-[0_6px_16px_rgba(15,23,42,0.16)]',
+                            )
+                          : cn(
+                              softCategoryColorMap[cat.color || ''] ||
+                                'bg-slate-100 text-slate-400',
+                              'ring-1 ring-slate-200/90',
+                            ),
+                      )}
+                      aria-label={`Select ${cat.name}`}
+                      title={cat.name}
+                    >
+                      <HugeiconsIcon
+                        icon={
+                          cat.icon
+                            ? ICON_MAP[cat.icon] || DEFAULT_ICON
+                            : DEFAULT_ICON
+                        }
+                        size={20}
+                        className="mx-auto"
+                      />
+                    </button>
+                  ))}
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label
-                  htmlFor="date-input"
-                  className="text-xs font-medium text-foreground ml-1"
+            </div>
+
+            <div className="relative h-12 min-h-[44px] rounded-2xl bg-secondary/35 px-4 flex items-center justify-between gap-2 border border-border/35">
+              <div className="relative flex items-center gap-2 text-foreground">
+                <svg
+                  viewBox="0 0 24 24"
+                  className="h-5 w-5 text-muted-foreground"
+                  aria-hidden="true"
                 >
-                  Date
-                </Label>
+                  <rect
+                    x="3.5"
+                    y="5"
+                    width="17"
+                    height="15.5"
+                    rx="2.2"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                  />
+                  <path
+                    d="M7 3.7v2.8M17 3.7v2.8M3.7 9h16.6"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <span className="text-[1.02rem] font-medium">
+                  {formattedDate}
+                </span>
                 <input
                   id="date-input"
                   name="date"
@@ -447,113 +522,83 @@ const TransactionForm: React.FC = () => {
                   required
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full h-11 bg-secondary/40 border border-transparent rounded-[1rem] font-medium text-[13px] px-4 outline-none focus-visible:border-primary/40 focus-visible:ring-4 focus-visible:ring-primary/5 transition-colors text-foreground tabular-nums hover:cursor-pointer"
+                  className="absolute inset-y-0 left-0 right-24 z-10 cursor-pointer opacity-0"
+                  aria-label="Change transaction date"
                 />
               </div>
-            </div>
-
-            {/* Calculator Keypad - Compact */}
-            <div className="bg-secondary/10 p-1.5 rounded-[1.25rem] border border-border/40">
-              <div className="grid grid-cols-4 gap-1.5">
-                {[
-                  '7',
-                  '8',
-                  '9',
-                  '/',
-                  '4',
-                  '5',
-                  '6',
-                  '*',
-                  '1',
-                  '2',
-                  '3',
-                  '-',
-                  'C',
-                  '0',
-                  '000',
-                  '+',
-                ].map((k) => (
-                  <Button
-                    key={k}
-                    type="button"
-                    variant="ghost"
-                    onClick={() => handleKeyClick(k)}
-                    aria-label={k === 'C' ? 'Clear' : k}
-                    className={cn(
-                      'h-11 font-medium text-[14px] rounded-xl transition-colors active:scale-95 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary',
-                      k === 'C'
-                        ? 'text-destructive hover:bg-destructive/10'
-                        : 'bg-card/60 hover:bg-card border border-border/30 shadow-[0_1px_2px_rgba(0,0,0,0.02)]',
-                    )}
-                  >
-                    {k}
-                  </Button>
-                ))}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => handleKeyClick('.')}
-                  aria-label="Decimal point"
-                  className="h-11 font-medium text-[14px] rounded-xl bg-card/60 hover:bg-card border border-border/30 shadow-[0_1px_2px_rgba(0,0,0,0.02)] active:scale-95 transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
-                >
-                  .
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => handleKeyClick('=')}
-                  aria-label="Calculate equals"
-                  className="h-11 font-semibold text-[14px] rounded-xl col-span-2 bg-foreground text-background shadow-md hover:bg-foreground/90 active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
-                >
-                  =
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => handleKeyClick('DEL')}
-                  aria-label="Delete last character"
-                  className="h-11 font-medium text-[14px] rounded-xl bg-card/60 hover:bg-card border border-border/30 shadow-[0_1px_2px_rgba(0,0,0,0.02)] flex items-center justify-center text-muted-foreground active:scale-95 transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
-                >
-                  <HugeiconsIcon
-                    icon={Delete02Icon}
-                    size={18}
-                    strokeWidth={2}
-                  />
-                </Button>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label
-                htmlFor="note-input"
-                className="text-xs font-medium text-foreground ml-1"
+              <button
+                type="button"
+                onClick={() => {
+                  const yesterday = new Date();
+                  yesterday.setDate(yesterday.getDate() - 1);
+                  setDate(yesterday.toISOString().split('T')[0]);
+                }}
+                className="relative text-[0.95rem] font-semibold underline underline-offset-2 text-foreground/85 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-md px-1"
               >
-                Note (Optional)
+                Kemarin?
+              </button>
+            </div>
+
+            <div className="h-12 min-h-[44px] rounded-2xl bg-secondary/35 px-4 flex items-center gap-2 border border-border/35 focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/20">
+              <svg
+                viewBox="0 0 24 24"
+                className="h-5 w-5 text-muted-foreground shrink-0"
+                aria-hidden="true"
+              >
+                <path
+                  d="M4 17.2V20h2.8l9.9-9.9-2.8-2.8L4 17.2Zm14.7-8.4a.75.75 0 0 0 0-1.1l-2.4-2.4a.75.75 0 0 0-1.1 0l-1.9 1.9 3.5 3.5 1.9-1.9Z"
+                  fill="currentColor"
+                />
+              </svg>
+              <Label htmlFor="note-input" className="sr-only">
+                Note
               </Label>
-              <textarea
+              <input
                 id="note-input"
                 name="note"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                placeholder="What was this for?"
-                className="w-full px-4 py-3 bg-secondary/30 border border-transparent rounded-[1rem] outline-none h-20 resize-none font-medium text-[13px] text-foreground placeholder:text-muted-foreground/60 focus-visible:border-primary/40 focus-visible:ring-4 focus-visible:ring-primary/5 transition-colors shadow-inner"
+                placeholder="Notes..."
+                className="h-full w-full bg-transparent outline-none text-[1rem] font-medium text-foreground placeholder:text-muted-foreground"
               />
             </div>
-          </div>
 
-          <div className="shrink-0 px-6 pb-5 pt-3 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-t border-border/40">
-            <Button
-              type="submit"
-              disabled={isListening || isParsing}
-              className="group w-full h-12 rounded-xl bg-primary text-primary-foreground font-semibold text-[14px] shadow-lg shadow-primary/20 hover:bg-primary/95 active:scale-[0.98] transition-all flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
-            >
-              {editingTransactionId ? 'Update Record' : 'Save Record'}
-              <HugeiconsIcon
-                icon={Tick01Icon}
-                size={20}
-                strokeWidth={2.5}
-                className="transition-transform group-hover:scale-110"
-              />
-            </Button>
+            <div className="grid grid-cols-4 gap-1.5 pb-2">
+              {keypadKeys.map((k) => (
+                <Button
+                  key={`${k.label}-${k.value}`}
+                  type="button"
+                  variant="ghost"
+                  onClick={() => handleKeyClick(k.value)}
+                  aria-label={k.isDelete ? 'Delete last character' : k.label}
+                  className={cn(
+                    'h-12 min-h-[44px] rounded-xl border border-slate-200/80 bg-slate-50/95 text-lg font-medium leading-none text-slate-700 transition-colors hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-primary/35 motion-reduce:transition-none shadow-[0_1px_0_rgba(15,23,42,0.03)]',
+                    k.tone === 'danger' && 'text-slate-900',
+                  )}
+                >
+                  {k.isDelete ? (
+                    <HugeiconsIcon
+                      icon={Delete02Icon}
+                      size={18}
+                      className="text-muted-foreground"
+                    />
+                  ) : (
+                    <span className="translate-y-[1px]">{k.label}</span>
+                  )}
+                </Button>
+              ))}
+
+              <Button
+                type="submit"
+                disabled={isListening || isParsing}
+                aria-label={
+                  editingTransactionId ? 'Update record' : 'Save record'
+                }
+                className="col-start-4 row-start-4 row-span-2 h-full min-h-[116px] rounded-2xl bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 disabled:opacity-60 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary motion-reduce:transition-none"
+              >
+                <HugeiconsIcon icon={Tick01Icon} size={26} strokeWidth={2.8} />
+              </Button>
+            </div>
           </div>
         </form>
       </DrawerContent>
