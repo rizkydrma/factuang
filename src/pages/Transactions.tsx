@@ -1,178 +1,196 @@
 import React, { useMemo, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db, type Transaction } from '../db/database';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ArrowLeft01Icon, ArrowRight01Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Delete02Icon, Search01Icon } from '@hugeicons/core-free-icons';
+
 import SearchBar from '@/components/SearchBar';
 import PageHeader from '@/components/PageHeader';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Typography } from '@/components/ui/Typography';
-import TransactionItem from '@/components/TransactionItem';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { db, type Category, type Transaction } from '@/db/database';
+import TransactionHistory from '@/pages/dashboard/components/TransactionHistory';
+import { ReportView } from '@/pages/dashboard/components/ReportView';
 
-// --- Constants & Utilities ---
+const Transactions: React.FC = () => {
+  const [activeTab, setActiveTab] = useState('history');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentDate, setCurrentDate] = useState(new Date());
 
-const formatDateHeader = (dateStr: string) => {
-  const date = new Date(dateStr);
-  const today = new Date();
-  const yesterday = new Date();
-  yesterday.setDate(today.getDate() - 1);
+  const liveCategories = useLiveQuery(() => db.categories.toArray());
+  const rawTransactions = useLiveQuery(() => db.transactions.toArray());
 
-  if (date.toDateString() === today.toDateString()) return 'Hari Ini';
-  if (date.toDateString() === yesterday.toDateString()) return 'Kemarin';
+  const categories = useMemo(() => liveCategories || [], [liveCategories]);
+  const liveTransactions = useMemo(
+    () => rawTransactions || [],
+    [rawTransactions],
+  );
 
-  return date.toLocaleDateString('id-ID', {
-    day: 'numeric',
+  const categoriesMap = useMemo(
+    () =>
+      new Map<string, Category>(
+        categories.map((category) => [category.name, category]),
+      ),
+    [categories],
+  );
+
+  const filteredHistoryTransactions = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    const sortedTransactions = [...liveTransactions].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+    );
+
+    if (!query) return sortedTransactions;
+
+    return sortedTransactions.filter(
+      (transaction) =>
+        transaction.category.toLowerCase().includes(query) ||
+        (transaction.note || '').toLowerCase().includes(query),
+    );
+  }, [liveTransactions, searchTerm]);
+
+  const groupedTransactions = useMemo(() => {
+    const groups: Record<string, Transaction[]> = {};
+
+    filteredHistoryTransactions.forEach((transaction) => {
+      const dateObj = new Date(transaction.date);
+      const isoKey = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+      if (!groups[isoKey]) groups[isoKey] = [];
+      groups[isoKey].push(transaction);
+    });
+
+    return Object.entries(groups).sort(([dateA], [dateB]) =>
+      dateB.localeCompare(dateA),
+    );
+  }, [filteredHistoryTransactions]);
+
+  const reportTransactions = useMemo(() => {
+    const monthStart = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      1,
+    );
+    const monthEnd = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+      999,
+    );
+
+    return liveTransactions.filter((transaction) => {
+      const transactionDate = new Date(transaction.date);
+      return transactionDate >= monthStart && transactionDate <= monthEnd;
+    });
+  }, [currentDate, liveTransactions]);
+
+  const monthYearLabel = currentDate.toLocaleString('id-ID', {
     month: 'long',
     year: 'numeric',
   });
-};
 
-// --- Main Page Component ---
-
-const Transactions: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [deleteId, setDeleteId] = useState<number | null>(null);
-
-  const categories = useLiveQuery(() => db.categories.toArray());
-  const categoriesMap = useMemo(() => {
-    const map = new Map();
-    categories?.forEach((c) => map.set(c.name, c));
-    return map;
-  }, [categories]);
-
-  const liveTransactions = useLiveQuery(
-    () =>
-      db.transactions
-        .reverse()
-        .filter(
-          (t) =>
-            t.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (t.note || '').toLowerCase().includes(searchTerm.toLowerCase()),
-        )
-        .toArray(),
-    [searchTerm],
-  );
-
-  const transactions = useMemo(
-    () => liveTransactions || [],
-    [liveTransactions],
-  );
-
-  const groupedTransactions = useMemo(() => {
-    return transactions.reduce(
-      (groups, t) => {
-        const date = t.date;
-        if (!groups[date]) groups[date] = [];
-        groups[date].push(t);
-        return groups;
-      },
-      {} as Record<string, Transaction[]>,
-    );
-  }, [transactions]);
-
-  const handleDelete = async () => {
-    if (deleteId) {
-      await db.transactions.delete(deleteId);
-      setDeleteId(null);
-    }
+  const changeMonth = (delta: number) => {
+    const nextDate = new Date(currentDate);
+    nextDate.setMonth(currentDate.getMonth() + delta);
+    setCurrentDate(nextDate);
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background transition-colors duration-300">
-      <PageHeader title="History" subtitle="Riwayat Transaksi" showBack />
+    <div className="flex min-h-screen flex-col bg-background transition-colors duration-300">
+      <PageHeader
+        title="Transactions"
+        subtitle="Riwayat dan laporan transaksi"
+        showBack
+      />
 
-      <main className="flex-1 p-6 pb-32">
-        <div className="mb-8">
-          <SearchBar
-            value={searchTerm}
-            onChange={setSearchTerm}
-            placeholder="Search records..."
-          />
-        </div>
+      <main className="relative flex-1 overflow-hidden pb-32 pt-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="px-6">
+          <TabsList className="mb-6 w-full rounded-md border border-border/50 bg-muted/40 p-1.5 backdrop-blur-md">
+            <TabsTrigger
+              value="history"
+              className="flex-1 gap-2 rounded-md py-3.5 transition-all duration-300 data-active:bg-primary data-active:text-primary-foreground data-active:shadow-lg data-active:shadow-primary/30"
+            >
+              <span className="font-semibold">Riwayat Transaksi</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="report"
+              className="flex-1 gap-2 rounded-md py-3.5 transition-all duration-300 data-active:bg-primary data-active:text-primary-foreground data-active:shadow-lg data-active:shadow-primary/30"
+            >
+              <span className="font-semibold">Laporan</span>
+            </TabsTrigger>
+          </TabsList>
 
-        {transactions.length > 0 ? (
-          <div className="space-y-10">
-            {Object.entries(groupedTransactions).map(([date, items]) => (
-              <div key={date} className="space-y-4">
-                <div className="flex items-center gap-4 px-2">
-                  <Typography
-                    variant="xs"
-                    weight="bold"
-                    className="text-foreground/30 whitespace-nowrap tracking-[0.2em]"
-                    as="h3"
-                  >
-                    {formatDateHeader(date)}
-                  </Typography>
-                  <div className="h-px bg-border/40 w-full" />
-                </div>
+          <TabsContent value="history" className="space-y-5 outline-none">
+            <SearchBar
+              value={searchTerm}
+              onChange={setSearchTerm}
+              placeholder="Cari transaksi..."
+            />
 
-                <div className="space-y-2">
-                  {items.map((t) => (
-                    <TransactionItem
-                      key={t.id}
-                      t={t}
-                      categoriesMap={categoriesMap}
-                      isCensored={false}
-                      onDeleteRequest={(id) => setDeleteId(id)}
-                    />
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="py-24 flex flex-col items-center justify-center text-center opacity-20">
-            <div className="p-10 bg-secondary rounded-full mb-6">
-              <HugeiconsIcon icon={Search01Icon} size={56} strokeWidth={1} />
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`history-${searchTerm}-${groupedTransactions.length}`}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.25, ease: 'easeOut' }}
+              >
+                <TransactionHistory
+                  groupedTransactions={groupedTransactions}
+                  categoriesMap={categoriesMap}
+                  isCensored={false}
+                />
+              </motion.div>
+            </AnimatePresence>
+          </TabsContent>
+
+          <TabsContent value="report" className="space-y-5 outline-none">
+            <div className="flex items-center justify-between rounded-2xl border border-border/50 bg-muted/20 px-4 py-3">
+              <button
+                type="button"
+                onClick={() => changeMonth(-1)}
+                className="flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                aria-label="Previous month"
+              >
+                <HugeiconsIcon icon={ArrowLeft01Icon} size={18} />
+              </button>
+              <Typography
+                variant="small"
+                weight="semibold"
+                className="capitalize"
+              >
+                {monthYearLabel}
+              </Typography>
+              <button
+                type="button"
+                onClick={() => changeMonth(1)}
+                className="flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                aria-label="Next month"
+              >
+                <HugeiconsIcon icon={ArrowRight01Icon} size={18} />
+              </button>
             </div>
-            <Typography variant="xs" weight="bold" className="tracking-[0.4em]">
-              No transactions recorded
-            </Typography>
-          </div>
-        )}
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`report-${monthYearLabel}`}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.25, ease: 'easeOut' }}
+              >
+                <ReportView
+                  transactions={reportTransactions}
+                  currentDate={currentDate}
+                  categoriesMap={categoriesMap}
+                />
+              </motion.div>
+            </AnimatePresence>
+          </TabsContent>
+        </Tabs>
       </main>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
-        <DialogContent className="max-w-[340px] rounded-[2rem] p-8 border-none ring-1 ring-black/5 shadow-2xl bg-background/95 backdrop-blur-2xl">
-          <DialogHeader className="space-y-4">
-            <div className="mx-auto w-16 h-16 bg-destructive/10 rounded-2xl flex items-center justify-center text-destructive mb-2">
-              <HugeiconsIcon icon={Delete02Icon} size={32} />
-            </div>
-            <DialogTitle className="text-xl font-bold text-center uppercase tracking-tight italic">
-              Hapus Transaksi?
-            </DialogTitle>
-            <DialogDescription className="text-center text-xs font-medium opacity-60 px-2 leading-relaxed">
-              Tindakan ini tidak dapat dibatalkan. Transaksi akan dihapus secara
-              permanen dari riwayat kamu.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex flex-col gap-2 mt-6 sm:flex-col sm:space-x-0">
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              className="w-full h-12 rounded-xl font-bold uppercase tracking-widest text-[10px] shadow-lg shadow-destructive/20"
-            >
-              Hapus Sekarang
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => setDeleteId(null)}
-              className="w-full h-12 rounded-xl font-bold uppercase tracking-widest text-[10px] opacity-40 hover:opacity-100"
-            >
-              Batalkan
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

@@ -69,7 +69,7 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
             <Typography
               variant="xs"
               weight="semibold"
-              className="px-2.5 py-1 glass-card-sm rounded-lg"
+              className="px-2.5 py-1 bg-primary text-white rounded-lg"
             >
               {txs.length} Items
             </Typography>
